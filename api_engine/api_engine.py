@@ -2,13 +2,13 @@ import json
 import requests
 
 from config_data import AVIASALES_API_TOKEN, AVIASALES_BASE_URL
+from typing import Optional
 
 
 def build_url_certain_dates(origin: str, destination: str,
                             departure_at: str = None, return_at: str = None,
                             one_way: bool = True, direct: bool = False,
                             limit: int = 10, sorting: str = 'price'):
-
     # Базовый запрос, в который включены неизменяемые параметры
     url = f'{AVIASALES_BASE_URL}v3/prices_for_dates?origin={origin}' \
           f'&destination={destination}&unique=false&cy=rub&page=1' \
@@ -31,6 +31,19 @@ def build_url_certain_dates(origin: str, destination: str,
     return url
 
 
+def send_request(origin: str, destination: str,
+                 departure_at: str = None, return_at: str = None,
+                 save_to_file: Optional[str] = '../response_example.json'):
+    response = requests.get(
+        url=build_url_certain_dates(
+            origin=origin,  # 'MOW',
+            destination=destination,  # "GSV",
+            departure_at=departure_at,  # '2023-08-10',
+            return_at=return_at  # '2023-08-14'
+        ))
+
+    with open(save_to_file, 'w', encoding='utf-8') as file:
+        json.dump(response.json(), file, indent=4)
 
 
 def print_response(data):
@@ -49,18 +62,7 @@ def print_response(data):
               f'Продолжительность перелёта обратно в минутах (мин): {i_data["duration_back"]}\n'
               f'Ссылка на билет: https://www.aviasales.ru' + i_data["link"] + '\n\n')
 
-
 # origin = input('Введите пункт отправления: ')
 # destination = input('Введите пункт назначения: ')
 # departure_at = input('Введите дату вылета из пункта отправления: ')
 # return_at = input('Введите дату возвращения: ')
-#
-# response = requests.get(url=build_url(
-#     origin='MOW',
-#     destination="GSV",
-#     departure_at='2023-08-10',
-#     return_at='2023-08-14'
-# ))
-
-# with open('../response_example.json', 'w', encoding='utf-8') as file:
-#     json.dump(response.json(), file, indent=4)
