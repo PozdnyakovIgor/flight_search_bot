@@ -51,7 +51,11 @@ def send_request(origin: str, destination: str,
 
 def pretty_response(response):
     tickets = ''
-    for ticket in response["data"]:
+
+    if 'data' in response:
+        response = response['data']
+
+    for ticket in response:
         tickets += (f'Город отправления: {ticket["origin"]}\n'
                     f'Аэропорт отправления: {ticket["origin_airport"]}\n'
                     f'Город прибытия: {ticket["destination"]}\n'
@@ -67,9 +71,3 @@ def pretty_response(response):
                     f'Ссылка на билет: https://www.aviasales.ru' + ticket["link"] + '\n\n')
     print(tickets)
     return tickets
-
-
-# origin = input('Введите пункт отправления: ')
-# destination = input('Введите пункт назначения: ')
-# departure_at = input('Введите дату вылета из пункта отправления: ')
-# return_at = input('Введите дату возвращения: ')

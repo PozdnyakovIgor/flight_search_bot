@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import telebot
 from telebot import custom_filters
 from telebot.handler_backends import State, StatesGroup  # States
@@ -6,7 +8,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 from config_data.config import BOT_TOKEN
 from api_engine import send_request, pretty_response
-
+from database import *
 
 # Now, you can pass storage to bot.
 state_storage = StateMemoryStorage()  # you can init here another storage
@@ -117,6 +119,7 @@ def starting_keyboard():
     markup.add(*keys)
     return markup
 
+
 # Возможно стоит сделать дополнительные клавиатуры в каких-то сложных местах
 # def tickets_keyboard():
 #     markup = ReplyKeyboardMarkup(row_width=2)
@@ -131,6 +134,8 @@ def starting_keyboard():
 
 @bot.message_handler(commands=['start'])
 def starting_message(message):
+    add_user_to_database(name=message.chat.first_name,
+                         nickname=message.chat.username)
     bot.send_message(
         message.chat.id,
         'Привет, это бот по поискау авиабилетов из кэша авиасейлс',
@@ -153,7 +158,21 @@ def initialize_ticket_searching(message):
     bot.reply_to(message, 'Вас понял, сейчас поищем!')
     # TODO делать для каждого параметра свой вопрос
     origin, destination, departure_at = message.text.split(' ')
-    tickets = send_request(origin, destination, departure_at)
+    tickets = send_request(origin, destination, departure_at)['data']
+
+    # Обработаем пустой ответ от АПИ
+    if not len(tickets):
+        bot.send_message(message.chat.id, 'В кэше не найдено таких билетов :(')
+
+    # Возможно собирание инфу для БД стоит сделать отдельным методом для читабельности
+    for ticket in tickets:
+        add_tickets_search_to_history(
+            nickname=message.chat.username,
+            link=f'https://www.aviasales.ru{ticket["link"]}',
+            info=f'{ticket["origin"]} -> {ticket["destination"]} '
+                 f'at {ticket["departure_at"]}({ticket["duration_to"]}mins)',
+            date=datetime.now())
+
     bot.send_message(message.chat.id, pretty_response(tickets))
 
 
