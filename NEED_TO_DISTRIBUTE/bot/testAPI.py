@@ -1,8 +1,11 @@
 import json
-from config import *
 import requests
-from travelpayouts import Client
-import stun
+
+from config_data.config import AVIASALES_API_TOKEN
+
+
+# from travelpayouts import Client
+# import stun
 
 
 # current_ip = stun.get_ip_info()[1]
@@ -11,24 +14,25 @@ import stun
 # print(aviasales_client.whereami(current_ip))
 
 
-# TODO  можно поставить библу, которая переводит координаты в город
+# TODO  можно поставить библу, которая переводит координаты в город (скорей всего так делать не буду)
 # print(aviasales_client.search(segments={'origin': 'PAR', 'destination': 'BER', 'date': '2023-10-21'},
 #                               passengers={'adults': '2'},
 #                               host='https://t.me/EASY_BREEZE_BOT',
 #                               user_ip=current_ip))
 
+
+# сделал переменную AVIASALES_BASE_URL в config_data.config: https://api.travelpayouts.com/aviasales/
 def build_url(origin, destination, departure_at, return_at, token=AVIASALES_API_TOKEN):
     url = f'https://api.travelpayouts.com/aviasales/v3/prices_for_dates?' \
           f'origin={origin}&' \
           f'destination={destination}&' \
           f'departure_at={departure_at}&' \
-          f'return_at={return_at}&unique=false&sorting=price&direct=false&cy=rub&limit=100&page=1&one_way=true&' \
+          f'return_at={return_at}&unique=false&sorting=price&direct=false&cy=rub&limit=10&page=1&one_way=true&' \
           f'token={token}'
     return url
 
 
 def print_response(data):
-
     for i_data in data["data"]:
         print(f'Город отправления: {i_data["origin"]}\n'
               f'Аэропорт отправления: {i_data["origin_airport"]}\n'
@@ -58,9 +62,6 @@ def print_response(data):
         # link = 'https://www.aviasales.ru' + f'{i_data["link"]}\n\n'
 
 
-
-
-
 #  Поменял значение limit (было 30)
 
 # origin = input('Введите пункт отправления: ')
@@ -70,19 +71,19 @@ def print_response(data):
 
 response = requests.get(url=build_url(
     origin='MOW',
-    destination="LED",
-    departure_at='2023-10-11',
-    return_at='2023-11-01'))
+    destination="GSV",
+    departure_at='2023-08-10',
+    return_at='2023-08-14'
+))
+# При таких датах отправления и прибытия ничего не находит, хотя на авиасейлз билеты есть. Находит билеты, если 2023-10-11 и 2023-11-01, аэропорт прибытия LED
 
+
+print(response.json())
 data = json.loads(response.text)
-# print(data['data'][1]['price'])
-print(print_response(data))
+print_response(data)
 
-
-
-# with open('response_example.json', 'w', encoding='utf-8') as file:
-#     json.dump(response.json(), file, indent=4)
-
+with open('../../response_example.json', 'w', encoding='utf-8') as file:
+    json.dump(response.json(), file, indent=4)
 
 # print(response.json())
 # TODO придумать 3-4 метода по аналогии с ТЗ, вынести основные методы в отдельные файлы,

@@ -4,7 +4,7 @@ from telebot.handler_backends import State, StatesGroup  # States
 from telebot.storage import StateMemoryStorage  # States storage
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
-from config import BOT_TOKEN
+from config_data.config import BOT_TOKEN
 
 # Now, you can pass storage to bot.
 state_storage = StateMemoryStorage()  # you can init here another storage
