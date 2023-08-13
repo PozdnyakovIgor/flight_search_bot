@@ -44,23 +44,26 @@ def send_request(origin: str, destination: str,
 
     with open(save_to_file, 'w', encoding='utf-8') as file:
         json.dump(response.json(), file, indent=4)
+        
+    return response
 
 
-def print_response(data):
-    for i_data in data["data"]:
-        print(f'Город отправления: {i_data["origin"]}\n'
-              f'Аэропорт отправления: {i_data["origin_airport"]}\n'
-              f'Город прибытия: {i_data["destination"]}\n'
-              f'Аэропорт прибытия: {i_data["destination_airport"]}\n'
-              f'Дата и время вылета из пункта отправления: {i_data["departure_at"]}\n'
-              f'Дата и время обратного рейса: {i_data["return_at"]}\n'
-              f'Цена (руб): {i_data["price"]}\n'
-              f'Количество пересадок на пути "туда": {i_data["transfers"]}\n'
-              f'Количество пересадок на пути "обратно": {i_data["return_transfers"]}\n'
-              f'Общая продолжительность полета туда-обратно (мин): {i_data["duration"]}\n'
-              f'Продолжительность перелёта до места назначения (мин): {i_data["duration_to"]}\n'
-              f'Продолжительность перелёта обратно в минутах (мин): {i_data["duration_back"]}\n'
-              f'Ссылка на билет: https://www.aviasales.ru' + i_data["link"] + '\n\n')
+def pretty_response(response):
+    for ticket in response["data"]:
+        print(f'Город отправления: {ticket["origin"]}\n'
+              f'Аэропорт отправления: {ticket["origin_airport"]}\n'
+              f'Город прибытия: {ticket["destination"]}\n'
+              f'Аэропорт прибытия: {ticket["destination_airport"]}\n'
+              f'Дата и время вылета из пункта отправления: {ticket["departure_at"]}\n'
+              f'Дата и время обратного рейса: {ticket["return_at"]}\n'
+              f'Цена (руб): {ticket["price"]}\n'
+              f'Количество пересадок на пути "туда": {ticket["transfers"]}\n'
+              f'Количество пересадок на пути "обратно": {ticket["return_transfers"]}\n'
+              f'Общая продолжительность полета туда-обратно (мин): {ticket["duration"]}\n'
+              f'Продолжительность перелёта до места назначения (мин): {ticket["duration_to"]}\n'
+              f'Продолжительность перелёта обратно в минутах (мин): {ticket["duration_back"]}\n'
+              f'Ссылка на билет: https://www.aviasales.ru' + ticket["link"] + '\n\n')
+
 
 # origin = input('Введите пункт отправления: ')
 # destination = input('Введите пункт назначения: ')
