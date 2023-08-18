@@ -7,7 +7,7 @@ def starting_keyboard():
             KeyboardButton('/Хочу отдохнуть, но не знаю где...'),
             KeyboardButton('/Ближайшие аэропорты'),
             KeyboardButton('/История'),
-            KeyboardButton('/FAQ')
+            KeyboardButton('/help')
             ]
     markup.add(*keys)
     return markup
