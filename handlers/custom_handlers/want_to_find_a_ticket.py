@@ -1,9 +1,10 @@
 from loader import bot
 from states.ticket_information import TicketInfoState
 from telebot.types import Message
+from api_engine.api_engine import send_request, pretty_response
 
 
-@bot.message_handler(commands=['Хочу найти билет!'])
+@bot.message_handler(commands=['want_ticket'])
 def want_to_find_a_ticket(message: Message) -> None:
     bot.set_state(message.from_user.id, TicketInfoState.origin, message.chat.id)  # message.from_user.username - никнейм
     bot.send_message(message.from_user.id, f'Отлично! Укажите, откуда Вы бы хотели полететь?')
@@ -51,3 +52,8 @@ def get_return_at(message: Message) -> None:
 
     with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
         ticket_data['return_at'] = message.text
+
+    tickets = send_request(ticket_data['origin'], ticket_data['destination'],
+                           ticket_data['departure_at'], ticket_data['return_at'])
+
+    bot.send_message(message.chat.id, pretty_response(tickets))
