@@ -15,7 +15,7 @@ def build_url_certain_dates(origin: str, destination: str,
           f'&destination={destination}&unique=false&cy=rub&page=1' \
           f'&token={AVIASALES_API_TOKEN}'
 
-    # Разширяем запрос в зависимости от аргументов
+    # Расширяем запрос в зависимости от аргументов
     if departure_at:
         url += f'&departure_at={departure_at}'
     if return_at:

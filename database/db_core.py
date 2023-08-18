@@ -27,22 +27,27 @@ class History(BaseModel):
 # создаем реальную таблицу на основе модели, которая описана в классе
 Users.create_table()
 History.create_table()
-admin = Users.create(name='admin', nickname='admin')
+# admin = Users.create(name='admin', nickname='admin')
 
+
+# def add_user_to_database(name: str, nickname: str):
+#     if is_user_unique(nickname):
+#         new_user = Users.create(name=name, nickname=nickname)
+#         new_user.save(force_insert=True)
+#         print('Пользователь добавлен в базу')
+#         return new_user
+#     else:
+#         print('Пользователь уже есть базе')
 
 def add_user_to_database(name: str, nickname: str):
-    if is_user_unique(nickname):
-        new_user = Users.create(name=name, nickname=nickname)
-        new_user.save(force_insert=True)
-        print('Пользователь добавлен в базу')
-        return new_user
-    else:
-        print('Пользователь уже есть базе')
+    new_user = Users.create(name=name, nickname=nickname)
+    new_user.save(force_insert=True)
+    return new_user
 
 
-def is_user_unique(nickname: str) -> bool:
-    # TODO Плохо работает, надо проверять как-то по-другому. Смотреть ответ и проверять конкретное поле скорее всего
-    return bool(Users.select().where(Users.nickname == nickname).get())
+# def is_user_unique(nickname: str) -> bool:
+#     # TODO Плохо работает, надо проверять как-то по-другому. Смотреть ответ и проверять конкретное поле скорее всего
+#     return bool(Users.select().where(Users.nickname == nickname).get())
 
 
 def add_tickets_search_to_history(nickname: str, link: str, info: str, date: str | datetime):
@@ -63,4 +68,3 @@ def add_tickets_search_to_history(nickname: str, link: str, info: str, date: str
 # link_4 = History.create(
 #     user=Users.select().where(Users.name == 'Sergey').get(),
 #     link='google.com')
-
