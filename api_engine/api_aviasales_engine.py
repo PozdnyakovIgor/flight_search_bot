@@ -4,6 +4,8 @@ import requests
 from config_data import AVIASALES_API_TOKEN, AVIASALES_BASE_URL
 from typing import Optional
 
+from api_engine.api_travelpayouts_engine import get_city_name_from_iata_code
+
 
 def build_url_certain_dates(origin: str, destination: str,
                             departure_at: str = None, return_at: str = None,
@@ -56,12 +58,12 @@ def pretty_response(response):
         response = response['data']
 
     for ticket in response:
-        tickets += (f'Город отправления: {ticket["origin"]}\n'
-                    f'Аэропорт отправления: {ticket["origin_airport"]}\n'
-                    f'Город прибытия: {ticket["destination"]}\n'
-                    f'Аэропорт прибытия: {ticket["destination_airport"]}\n'
+        tickets += (f'Город отправления: {get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]})\n'
+                    f'Аэропорт отправления: {get_city_name_from_iata_code(ticket["origin_airport"])} ({ticket["origin_airport"]})\n'
+                    f'Город прибытия: {get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]})\n'
+                    f'Аэропорт прибытия: {get_city_name_from_iata_code(ticket["destination_airport"])} ({ticket["destination_airport"]})\n'
                     f'Дата и время вылета из пункта отправления: {ticket["departure_at"]}\n'
-                    # f'Дата и время обратного рейса: {ticket["return_at"]}\n'
+                    f'Дата и время обратного рейса: {ticket["return_at"]}\n'
                     f'Цена (руб): {ticket["price"]}\n'
                     f'Количество пересадок на пути "туда": {ticket["transfers"]}\n'
                     f'Количество пересадок на пути "обратно": {ticket["return_transfers"]}\n'

@@ -2,6 +2,7 @@ from loader import bot
 from states.ticket_information import TicketInfoState
 from telebot.types import Message
 from api_engine.api_aviasales_engine import send_request, pretty_response
+from api_engine.api_travelpayouts_engine import get_city_iata_code
 
 
 @bot.message_handler(commands=['want_ticket'])
@@ -17,7 +18,7 @@ def get_origin(message: Message) -> None:
         bot.set_state(message.from_user.id, TicketInfoState.destination, message.chat.id)
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
-            ticket_data['origin'] = message.text
+            ticket_data['origin'] = get_city_iata_code(message.text)
 
     else:
         bot.send_message(message.from_user.id, 'Название города может содержать только буквы.')
@@ -30,7 +31,7 @@ def get_destination(message: Message) -> None:
 
     with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:  # необходимо добавить проверку на
         # правильность введенной даты
-        ticket_data['destination'] = message.text
+        ticket_data['destination'] = get_city_iata_code(message.text)
 
 
 @bot.message_handler(state=TicketInfoState.departure_at)
