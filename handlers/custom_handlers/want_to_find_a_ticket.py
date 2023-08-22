@@ -1,7 +1,7 @@
 from loader import bot
 from states.ticket_information import TicketInfoState
 from telebot.types import Message
-from api_engine.api_engine import send_request, pretty_response
+from api_engine.api_aviasales_engine import send_request, pretty_response
 
 
 @bot.message_handler(commands=['want_ticket'])
@@ -48,7 +48,6 @@ def get_return_at(message: Message) -> None:
     bot.send_message(message.from_user.id, 'Отлично! Вся информация есть, ищу билеты...')
 
     # TODO необходимо добавить проверку на правильность введенной даты
-    # TODO подумать, в какое состояние необходимо возвращаться, когда будет введена вся информация
 
     with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
         ticket_data['return_at'] = message.text
@@ -56,4 +55,10 @@ def get_return_at(message: Message) -> None:
     tickets = send_request(ticket_data['origin'], ticket_data['destination'],
                            ticket_data['departure_at'], ticket_data['return_at'])
 
+    # Обработаем пустой ответ от АПИ
+    if not len(tickets):  # работает, если запрос составлен верно; если в запросе были ошибки, то TypeError: object of
+        # type 'NoneType' has no len()
+        bot.send_message(message.chat.id, 'В кэше не найдено таких билетов :(')
+
     bot.send_message(message.chat.id, pretty_response(tickets))
+    bot.delete_state(message.from_user.id, message.chat.id)  # сбрасываем состояние после выполнения запроса

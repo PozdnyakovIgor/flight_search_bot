@@ -9,5 +9,5 @@ def starting_message(message: Message) -> None:
     #                      nickname=message.chat.username)
     bot.send_message(
         message.chat.id,
-        f'Привет, {message.from_user.full_name}, это бот по поиску авиабилетов из кэша АВИАСЕЙЛЗ',
+        f'Привет, {message.from_user.full_name}, это бот по поиску авиабилетов из кэша Авиасейлз',
         reply_markup=starting_keyboard())
