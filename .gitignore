@@ -3,3 +3,4 @@ database/*.db
 .env
 /.idea
 response_example.json
+/test.py
