@@ -11,9 +11,11 @@ def want_to_find_a_ticket(message: Message) -> None:
     bot.send_message(message.from_user.id, f'Отлично! Укажите, откуда Вы бы хотели полететь?')
 
 
+# TODO подумать над последовательностью вопроса и записи ответа внутри функций (в начале with...., а потом следующий
+#  вопрос)
 @bot.message_handler(state=TicketInfoState.origin)
 def get_origin(message: Message) -> None:
-    if message.text.isalpha():  # проверка для примера
+    if get_city_iata_code(message.text) is not None:
         bot.send_message(message.from_user.id, 'Теперь введите город назначения:')
         bot.set_state(message.from_user.id, TicketInfoState.destination, message.chat.id)
 
@@ -21,26 +23,32 @@ def get_origin(message: Message) -> None:
             ticket_data['origin'] = get_city_iata_code(message.text)
 
     else:
-        bot.send_message(message.from_user.id, 'Название города может содержать только буквы.')
+        bot.send_message(message.from_user.id, 'В данном городе нет аэропорта, либо Вы ввели название города с '
+                                               'ошибкой. Введите название города:')
 
 
 @bot.message_handler(state=TicketInfoState.destination)
 def get_destination(message: Message) -> None:
-    bot.send_message(message.from_user.id, 'Когда хотите полететь?')
-    bot.set_state(message.from_user.id, TicketInfoState.departure_at, message.chat.id)
+    if get_city_iata_code(message.text) is not None:
+        bot.send_message(message.from_user.id, 'Когда хотите полететь?')
+        bot.set_state(message.from_user.id, TicketInfoState.departure_at, message.chat.id)
 
-    with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:  # необходимо добавить проверку на
-        # правильность введенной даты
-        ticket_data['destination'] = get_city_iata_code(message.text)
+        with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:  # необходимо добавить проверку на
+            # правильность введенной даты
+            ticket_data['destination'] = get_city_iata_code(message.text)
+
+    else:
+        bot.send_message(message.from_user.id, 'В данном городе нет аэропорта, либо Вы ввели название города с '
+                                               'ошибкой. Введите название города:')
 
 
 @bot.message_handler(state=TicketInfoState.departure_at)
 def get_departure_at(message: Message) -> None:
+    # TODO добавить проверку на правильность введенной даты
     bot.send_message(message.from_user.id, 'Когда хотите вернуться?')
     bot.set_state(message.from_user.id, TicketInfoState.return_at, message.chat.id)
 
-    with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:  # необходимо добавить проверку на
-        # правильность введенной даты
+    with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
         ticket_data['departure_at'] = message.text
 
 
