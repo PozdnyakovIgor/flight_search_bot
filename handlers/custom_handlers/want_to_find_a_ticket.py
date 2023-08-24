@@ -3,6 +3,7 @@ from states.ticket_information import TicketInfoState
 from telebot.types import Message
 from api_engine.api_aviasales_engine import send_request, pretty_response
 from api_engine.api_travelpayouts_engine import get_city_iata_code
+from utils.check_date import check_date
 
 
 @bot.message_handler(commands=['want_ticket'])
@@ -30,7 +31,7 @@ def get_origin(message: Message) -> None:
 @bot.message_handler(state=TicketInfoState.destination)
 def get_destination(message: Message) -> None:
     if get_city_iata_code(message.text) is not None:
-        bot.send_message(message.from_user.id, 'Когда хотите полететь?')
+        bot.send_message(message.from_user.id, 'Когда хотите полететь? Введите дату в формате YYYY-MM или YYYY-MM-DD')
         bot.set_state(message.from_user.id, TicketInfoState.departure_at, message.chat.id)
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:  # необходимо добавить проверку на
@@ -45,29 +46,39 @@ def get_destination(message: Message) -> None:
 @bot.message_handler(state=TicketInfoState.departure_at)
 def get_departure_at(message: Message) -> None:
     # TODO добавить проверку на правильность введенной даты
-    bot.send_message(message.from_user.id, 'Когда хотите вернуться?')
-    bot.set_state(message.from_user.id, TicketInfoState.return_at, message.chat.id)
+    if check_date(message.text):
+        bot.send_message(message.from_user.id, 'Когда хотите вернуться? Введите дату в формате YYYY-MM или YYYY-MM-DD')
+        bot.set_state(message.from_user.id, TicketInfoState.return_at, message.chat.id)
 
-    with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
-        ticket_data['departure_at'] = message.text
+        with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
+            ticket_data['departure_at'] = message.text
+    else:
+        bot.send_message(message.from_user.id, 'Проверьте правильность введенной даты: формат даты должен быть '
+                                               'YYYY-MM или YYYY-MM-DD, на прошедшие даты поиск не возможен.')
 
 
 @bot.message_handler(state=TicketInfoState.return_at)
 def get_return_at(message: Message) -> None:
-    bot.send_message(message.from_user.id, 'Отлично! Вся информация есть, ищу билеты...')
+    if check_date(message.text):
+        bot.send_message(message.from_user.id, 'Отлично! Вся информация есть, ищу билеты...')
 
-    # TODO необходимо добавить проверку на правильность введенной даты
+        # TODO необходимо добавить проверку на правильность введенной даты
 
-    with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
-        ticket_data['return_at'] = message.text
+        with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
+            ticket_data['return_at'] = message.text
 
-    tickets = send_request(ticket_data['origin'], ticket_data['destination'],
-                           ticket_data['departure_at'], ticket_data['return_at'])
+        tickets = send_request(ticket_data['origin'], ticket_data['destination'],
+                               ticket_data['departure_at'], ticket_data['return_at'])
 
-    # Обработаем пустой ответ от АПИ
-    if not len(tickets):  # работает, если запрос составлен верно; если в запросе были ошибки, то TypeError: object of
-        # type 'NoneType' has no len()
-        bot.send_message(message.chat.id, 'В кэше не найдено таких билетов :(')
+        # Обработаем пустой ответ от АПИ
+        if not len(tickets):  # работает, если запрос составлен верно; если в запросе были ошибки, то TypeError:
+            # object of
+            # type 'NoneType' has no len()
+            bot.send_message(message.chat.id, 'В кэше не найдено таких билетов :(')
 
-    bot.send_message(message.chat.id, pretty_response(tickets))
-    bot.delete_state(message.from_user.id, message.chat.id)  # сбрасываем состояние после выполнения запроса
+        bot.send_message(message.chat.id, pretty_response(tickets))
+        bot.delete_state(message.from_user.id, message.chat.id)  # сбрасываем состояние после выполнения запроса
+
+    else:
+        bot.send_message(message.from_user.id, 'Проверьте правильность введенной даты: формат даты должен быть '
+                                               'YYYY-MM или YYYY-MM-DD, на прошедшие даты поиск не возможен.')

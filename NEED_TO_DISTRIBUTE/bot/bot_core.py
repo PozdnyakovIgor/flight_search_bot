@@ -140,5 +140,5 @@ def echo_all(message):
 bot.add_custom_filter(custom_filters.StateFilter(bot))
 bot.add_custom_filter(custom_filters.IsDigitFilter())
 
-if __name__ == '__main__':
-    bot.infinity_polling()
+# if __name__ == '__main__':
+#     bot.infinity_polling()

@@ -14,16 +14,16 @@ from api_engine import send_request, pretty_response
 from database import *
 
 
-def starting_keyboard():
-    markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    keys = [KeyboardButton('Хочу найти билет!'),
-            KeyboardButton('Хочу отдохнуть, но не знаю где...'),
-            KeyboardButton('Ближайшие аэропорты'),
-            KeyboardButton('История'),
-            KeyboardButton('/FAQ')
-            ]
-    markup.add(*keys)
-    return markup
+# def starting_keyboard():
+#     markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+#     keys = [KeyboardButton('Хочу найти билет!'),
+#             KeyboardButton('Хочу отдохнуть, но не знаю где...'),
+#             KeyboardButton('Ближайшие аэропорты'),
+#             KeyboardButton('История'),
+#             KeyboardButton('/FAQ')
+#             ]
+#     markup.add(*keys)
+#     return markup
 
 
 # Возможно стоит сделать дополнительные клавиатуры в каких-то сложных местах

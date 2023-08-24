@@ -6,6 +6,8 @@ from typing import Optional
 
 from api_engine.api_travelpayouts_engine import get_city_name_from_iata_code, get_airport_name_from_iata_code
 
+from utils.check_date import format_date
+
 
 def build_url_certain_dates(origin: str, destination: str,
                             departure_at: str = None, return_at: str = None,
@@ -62,8 +64,8 @@ def pretty_response(response):
                     f'Аэропорт отправления: {get_airport_name_from_iata_code(ticket["origin_airport"])} ({ticket["origin_airport"]})\n'
                     f'Город прибытия: {get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]})\n'
                     f'Аэропорт прибытия: {get_airport_name_from_iata_code(ticket["destination_airport"])} ({ticket["destination_airport"]})\n'
-                    f'Дата и время вылета из пункта отправления: {ticket["departure_at"]}\n'
-                    f'Дата и время обратного рейса: {ticket["return_at"]}\n'
+                    f'Дата и время вылета из пункта отправления: {format_date(ticket["departure_at"])}\n'
+                    f'Дата и время обратного рейса: {format_date(ticket["return_at"])}\n'
                     f'Цена (руб): {ticket["price"]}\n'
                     f'Количество пересадок на пути "туда": {ticket["transfers"]}\n'
                     f'Количество пересадок на пути "обратно": {ticket["return_transfers"]}\n'
