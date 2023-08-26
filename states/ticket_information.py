@@ -15,3 +15,4 @@ class TicketInfoState(StatesGroup):
     destination = State()
     departure_at = State()
     return_at = State()
+    limit = State()

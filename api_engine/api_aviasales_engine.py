@@ -37,17 +37,18 @@ def build_url_certain_dates(origin: str, destination: str,
 
 
 def send_request(origin: str, destination: str,
-                 departure_at: str = None, return_at: str = None,
+                 departure_at: str = None, return_at: str = None, limit: int = None,
                  save_to_file: Optional[str] = '../response_example.json'):
     response = requests.get(
         url=build_url_certain_dates(
-            origin=origin,  # 'MOW',
-            destination=destination,  # "GSV",
-            departure_at=departure_at,  # '2023-08-10',
-            return_at=return_at  # '2023-08-14'
+            origin=origin,
+            destination=destination,
+            departure_at=departure_at,
+            return_at=return_at,
+            limit=limit
         ))
 
-    with open(save_to_file, 'w', encoding='utf-8') as file:
+    with open('response_example.json', 'w', encoding='utf-8') as file:
         json.dump(response.json(), file, indent=4)
 
     return response.json()
@@ -56,22 +57,23 @@ def send_request(origin: str, destination: str,
 def pretty_response(response):
     tickets = ''
 
-    if 'data' in response:
+    if len(response['data']):
         response = response['data']
+        for ticket in response:
+            tickets += (f'Город отправления: {get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]})\n'
+                        f'Аэропорт отправления: {get_airport_name_from_iata_code(ticket["origin_airport"])} ({ticket["origin_airport"]})\n'
+                        f'Город прибытия: {get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]})\n'
+                        f'Аэропорт прибытия: {get_airport_name_from_iata_code(ticket["destination_airport"])} ({ticket["destination_airport"]})\n'
+                        f'Дата и время вылета из пункта отправления: {format_date(ticket["departure_at"])}\n'
+                        f'Дата и время обратного рейса: {format_date(ticket["return_at"])}\n'
+                        f'Цена (руб): {ticket["price"]}\n'
+                        # f'Количество пересадок на пути "туда": {ticket["transfers"]}\n'
+                        # f'Количество пересадок на пути "обратно": {ticket["return_transfers"]}\n'
+                        # f'Общая продолжительность полета туда-обратно (мин): {ticket["duration"]}\n'
+                        # f'Продолжительность перелёта до места назначения (мин): {ticket["duration_to"]}\n'
+                        # f'Продолжительность перелёта обратно в минутах (мин): {ticket["duration_back"]}\n'
+                        f'Ссылка на билет: https://www.aviasales.ru' + ticket["link"] + '\n\n')
+    else:
+        tickets = 'В кэше не найдено таких билетов :('
 
-    for ticket in response:
-        tickets += (f'Город отправления: {get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]})\n'
-                    f'Аэропорт отправления: {get_airport_name_from_iata_code(ticket["origin_airport"])} ({ticket["origin_airport"]})\n'
-                    f'Город прибытия: {get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]})\n'
-                    f'Аэропорт прибытия: {get_airport_name_from_iata_code(ticket["destination_airport"])} ({ticket["destination_airport"]})\n'
-                    f'Дата и время вылета из пункта отправления: {format_date(ticket["departure_at"])}\n'
-                    f'Дата и время обратного рейса: {format_date(ticket["return_at"])}\n'
-                    f'Цена (руб): {ticket["price"]}\n'
-                    f'Количество пересадок на пути "туда": {ticket["transfers"]}\n'
-                    f'Количество пересадок на пути "обратно": {ticket["return_transfers"]}\n'
-                    f'Общая продолжительность полета туда-обратно (мин): {ticket["duration"]}\n'
-                    f'Продолжительность перелёта до места назначения (мин): {ticket["duration_to"]}\n'
-                    f'Продолжительность перелёта обратно в минутах (мин): {ticket["duration_back"]}\n'
-                    f'Ссылка на билет: https://www.aviasales.ru' + ticket["link"] + '\n\n')
-    print(tickets)
     return tickets
