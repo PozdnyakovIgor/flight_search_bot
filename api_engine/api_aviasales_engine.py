@@ -67,11 +67,6 @@ def pretty_response(response):
                         f'Дата и время вылета из пункта отправления: {format_date(ticket["departure_at"])}\n'
                         f'Дата и время обратного рейса: {format_date(ticket["return_at"])}\n'
                         f'Цена (руб): {ticket["price"]}\n'
-                        # f'Количество пересадок на пути "туда": {ticket["transfers"]}\n'
-                        # f'Количество пересадок на пути "обратно": {ticket["return_transfers"]}\n'
-                        # f'Общая продолжительность полета туда-обратно (мин): {ticket["duration"]}\n'
-                        # f'Продолжительность перелёта до места назначения (мин): {ticket["duration_to"]}\n'
-                        # f'Продолжительность перелёта обратно в минутах (мин): {ticket["duration_back"]}\n'
                         f'Ссылка на билет: https://www.aviasales.ru' + ticket["link"] + '\n\n')
     else:
         tickets = 'В кэше не найдено таких билетов :('
