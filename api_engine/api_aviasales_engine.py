@@ -12,7 +12,21 @@ from utils.check_date import format_date
 def build_url_certain_dates(origin: str, destination: str,
                             departure_at: str = None, return_at: str = None,
                             one_way: bool = True, direct: bool = False,
-                            limit: int = 3, sorting: str = 'price'):
+                            limit: int = 3, sorting: str = 'price') -> str:
+    """
+    Конструктор запроса
+
+    :param origin: город отправления
+    :param destination: город назначения
+    :param departure_at: дата вылета
+    :param return_at: дата возвращения
+    :param one_way: билет в одну сторону
+    :param direct: рейсы без пересадок
+    :param limit: количество записей в ответе
+    :param sorting: сортировка билетов по цене/популярности маршрута
+    :return: url
+    :rtype: str
+    """
 
     # Базовый запрос, в который включены неизменяемые параметры
     url = f'{AVIASALES_BASE_URL}v3/prices_for_dates?origin={origin}' \
@@ -37,8 +51,19 @@ def build_url_certain_dates(origin: str, destination: str,
 
 
 def send_request(origin: str, destination: str,
-                 departure_at: str = None, return_at: str = None, limit: int = None,
-                 save_to_file: Optional[str] = '../response_example.json'):
+                 departure_at: str = None, return_at: str = None,
+                 limit: int = None) -> json:
+    """
+    Метод для отправки запроса и получения информации о билетах
+
+    :param origin: город отправления
+    :param destination: город назначения
+    :param departure_at: дата вылета
+    :param return_at: дата возвращения
+    :param limit: количество записей в ответе
+    :return: response
+    :rtype: json
+    """
     response = requests.get(
         url=build_url_certain_dates(
             origin=origin,
@@ -48,25 +73,44 @@ def send_request(origin: str, destination: str,
             limit=limit
         ))
 
-    with open('response_example.json', 'w', encoding='utf-8') as file:
-        json.dump(response.json(), file, indent=4)
-
     return response.json()
 
 
-def pretty_response(response):
+def pretty_response(response: json) -> str:
+    """
+    Конструктор ответа для вывода пользователю
+
+    :param response: json-объект с информацией о билетах
+    :return: tickets
+    :rtype: str
+    """
+
     tickets = ''
 
     if len(response['data']):
         response = response['data']
         for ticket in response:
-            tickets += (f'Город отправления: {get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]})\n'
-                        f'Аэропорт отправления: {get_airport_name_from_iata_code(ticket["origin_airport"])} ({ticket["origin_airport"]})\n'
-                        f'Город прибытия: {get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]})\n'
-                        f'Аэропорт прибытия: {get_airport_name_from_iata_code(ticket["destination_airport"])} ({ticket["destination_airport"]})\n'
-                        f'Дата и время вылета из пункта отправления: {format_date(ticket["departure_at"])}\n'
-                        f'Дата и время обратного рейса: {format_date(ticket["return_at"])}\n'
+            tickets += (f'Город отправления: '
+                        f'{get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]})\n'
+                        
+                        f'Аэропорт отправления: '
+                        f'{get_airport_name_from_iata_code(ticket["origin_airport"])} ({ticket["origin_airport"]})\n'
+                        
+                        f'Город прибытия: '
+                        f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]})\n'
+                        
+                        f'Аэропорт прибытия: '
+                        f'{get_airport_name_from_iata_code(ticket["destination_airport"])} '
+                        f'({ticket["destination_airport"]})\n'
+                        
+                        f'Дата и время вылета из пункта отправления: '
+                        f'{format_date(ticket["departure_at"])}\n'
+                        
+                        f'Дата и время обратного рейса: '
+                        f'{format_date(ticket["return_at"])}\n'
+                        
                         f'Цена (руб): {ticket["price"]}\n'
+                        
                         f'Ссылка на билет: https://www.aviasales.ru' + ticket["link"] + '\n\n')
     else:
         tickets = 'В кэше не найдено таких билетов :('
