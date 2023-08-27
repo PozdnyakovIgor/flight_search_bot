@@ -18,7 +18,5 @@ DEFAULT_COMMANDS = (
 )
 
 AVIASALES_BASE_URL = 'https://api.travelpayouts.com/aviasales/'
-# TRAVELPAYOUTS_BASE_URL = 'https://autocomplete.travelpayouts.com/places2?locale=ru&types[]=city&term='  # тут поиск
-# только по городам
+
 TRAVELPAYOUTS_BASE_URL = 'https://autocomplete.travelpayouts.com/places2?locale=ru&types[]=airport&types[]=city&term='
-# показывает город и все аэропорты в городе

@@ -1,7 +1,14 @@
 from datetime import datetime
 
 
-def check_date(date_to_check):
+def check_date(date_to_check) -> bool:
+    """
+    Функция для проверки корректности введенной даты.
+    :param date_to_check: дата для проверки
+    :return: True or False
+    :rtype: bool
+    """
+
     today = datetime.today()
     try:
         return datetime.strptime(date_to_check, '%Y-%m-%d').date() >= datetime.today().date()
@@ -13,5 +20,9 @@ def check_date(date_to_check):
         return False
 
 
-def format_date(date_to_format):
+def format_date(date_to_format) -> datetime:
+    """
+    Функция для преобразования даты из ISO формата
+
+    """
     return datetime.fromisoformat(date_to_format)

@@ -2,7 +2,6 @@ import json
 import requests
 
 from config_data import AVIASALES_API_TOKEN, AVIASALES_BASE_URL
-from typing import Optional
 
 from api_engine.api_travelpayouts_engine import get_city_name_from_iata_code, get_airport_name_from_iata_code
 
@@ -28,12 +27,10 @@ def build_url_certain_dates(origin: str, destination: str,
     :rtype: str
     """
 
-    # Базовый запрос, в который включены неизменяемые параметры
     url = f'{AVIASALES_BASE_URL}v3/prices_for_dates?origin={origin}' \
           f'&destination={destination}&unique=false&cy=rub&page=1' \
           f'&token={AVIASALES_API_TOKEN}'
 
-    # Расширяем запрос в зависимости от аргументов
     if departure_at:
         url += f'&departure_at={departure_at}'
     if return_at:

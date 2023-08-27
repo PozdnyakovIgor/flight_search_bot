@@ -11,13 +11,11 @@ class BaseModel(Model):
         database = db
 
 
-# создали модель таблицы
 class Users(BaseModel):
     name = CharField()
     nickname = CharField(unique=True)
 
 
-# вторая таблица, связанная внешним ключом foreignkey
 class History(BaseModel):
     user = ForeignKeyField(Users, related_name='')
     link = CharField()
@@ -25,38 +23,34 @@ class History(BaseModel):
     date = DateField()
 
 
-# создаем реальную таблицу на основе модели, которая описана в классе
 Users.create_table()
 History.create_table()
 
 
-def add_user_to_database(name: str, nickname: str):
+def add_user_to_database(name: str, nickname: str) -> Model:
+    """
+    Функция для добавления нового пользователя в бд
+    :param name: имя пользователя
+    :param nickname: уникальный никнейм
+    :return: new_user
+    :rtype: Model
+    """
+
     with suppress(IntegrityError):
         new_user = Users.create(name=name, nickname=nickname)
         new_user.save()
         return new_user
 
 
-# def is_user_unique(nickname: str) -> bool:
-#     # TODO Плохо работает, надо проверять как-то по-другому. Смотреть ответ и проверять конкретное поле скорее всего
-#     return bool(Users.select().where(Users.nickname == nickname).get())
-
-
-def add_tickets_search_to_history(nickname: str, link: str, info: str, date: str | datetime):
+def add_tickets_search_to_history(nickname: str, link: str, info: str, date: str | datetime) -> None:
+    """
+    Функция для добавления билета в историю поиска
+    :param nickname: никнейм пользователя
+    :param link: ссылка на билет
+    :param info: краткая информация о билете
+    :param date: дата поиска
+    """
     History.create(user=Users.select().where(Users.nickname == nickname).get(),
                    link=link,
                    info=info,
                    date=date).save()
-
-# # создаем записи (строки)
-# sergey = Users.create(name='Sergey', nickname='@creespy')
-# igor = Users.create(name='Igor', nickname='@harry')
-#
-# link_1 = History.create(user=sergey, link='hilton.com')
-# link_2 = History.create(user=igor, link='mariot.com')
-# link_3 = History.create(user=igor, link='radison.com')
-#
-# # Сергей создал новый запрос
-# link_4 = History.create(
-#     user=Users.select().where(Users.name == 'Sergey').get(),
-#     link='google.com')
