@@ -17,3 +17,4 @@ def starting_message(message: Message) -> None:
         message.chat.id,
         f'Привет, {message.from_user.full_name}, это бот по поиску авиабилетов из кэша Авиасейлз',
         reply_markup=starting_keyboard())
+    bot.delete_state(message.from_user.id, message.chat.id)

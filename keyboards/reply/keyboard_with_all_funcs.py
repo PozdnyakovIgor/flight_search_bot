@@ -10,7 +10,7 @@ def starting_keyboard() -> ReplyKeyboardMarkup:
 
     markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     keys = [KeyboardButton('/want_ticket'),
-            KeyboardButton('/fly_away'),
+            KeyboardButton('/top_cheapest_tickets'),
             KeyboardButton('/nearest_airports'),
             KeyboardButton('/history'),
             KeyboardButton('/help')
