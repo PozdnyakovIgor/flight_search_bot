@@ -8,7 +8,8 @@ from api_engine.api_aviasales_engine import (
 from api_engine.api_travelpayouts_engine import get_city_iata_code
 from utils.check_date import check_date
 
-from keyboards.inline.yes_no_keyboard import yes_no_markup
+from keyboards.inline.departure_at_yes_no_keyboard import departure_at_yes_no_markup
+from keyboards.inline.return_at_yes_no_keyboard import return_at_yes_no_markup
 
 import json
 import requests
@@ -40,16 +41,17 @@ def get_origin(message: Message) -> None:
     CheapestTicketsInfoState.origin. Также осуществляется проверка на корректность введенного города
     """
     if get_city_iata_code(message.text) is not None:
-        bot.send_message(
-            message.from_user.id,
-            "Хотите указать дату отправления?",
-            reply_markup=yes_no_markup(),
-        )
-        bot.set_state(
-            message.from_user.id,
-            CheapestTicketsInfoState.ask_departure,
-            message.chat.id,
-        )
+        departure_at_yes_no_markup(message)
+        # bot.send_message(
+        #     message.from_user.id,
+        #     "Хотите указать дату отправления?",
+        #     reply_markup=departure_at_yes_no_markup(),
+        # )
+        # bot.set_state(
+        #     message.from_user.id,
+        #     CheapestTicketsInfoState.ask_departure,
+        #     message.chat.id,
+        # )
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
             ticket_data["origin"] = get_city_iata_code(message.text)
@@ -62,24 +64,25 @@ def get_origin(message: Message) -> None:
         )
 
 
-@bot.callback_query_handler(func=lambda call: call.data == "yes")
-@bot.message_handler(state=CheapestTicketsInfoState.ask_departure)
-def set_state_departure_at(message: Message) -> None:
-    bot.send_message(
-        message.from_user.id,
-        "Введите дату отправления (в формате YYYY-MM или YYYY-MM-DD): ",
-    )
-    bot.set_state(message.from_user.id, CheapestTicketsInfoState.ask_return)
+# @bot.callback_query_handler(func=lambda call: call.data == "yes")
+# @bot.message_handler(state=CheapestTicketsInfoState.departure_at)
+# def set_state_departure_at(message: Message) -> None:
+#     bot.send_message(
+#         message.from_user.id,
+#         "Введите дату отправления (в формате YYYY-MM или YYYY-MM-DD): ",
+#     )
+#     bot.set_state(message.from_user.id, CheapestTicketsInfoState.ask_return)
 
 
-@bot.message_handler(state=CheapestTicketsInfoState.ask_return)
+@bot.message_handler(state=CheapestTicketsInfoState.departure_at)
 def get_departure_at(message: Message) -> None:
     if check_date(message.text):
-        bot.send_message(
-            message.from_user.id,
-            "Хотите указать дату возвращения?",
-            reply_markup=yes_no_markup(),
-        )
+        return_at_yes_no_markup(message)
+        # bot.send_message(
+        #     message.from_user.id,
+        #     "Хотите указать дату возвращения?",
+        #     reply_markup=departure_at_yes_no_markup(),
+        # )
         # TODO надо разобраться со состояниями и call.data, при нажатии "да" бот спрашивает дату отправления,
         #  а не возвращения
 
@@ -94,14 +97,14 @@ def get_departure_at(message: Message) -> None:
         )
 
 
-@bot.callback_query_handler(func=lambda call: call.data == "yes")
-@bot.message_handler(state=CheapestTicketsInfoState.ask_return)
-def set_state_return_at(message: Message) -> None:
-    bot.send_message(
-        message.from_user.id,
-        "Когда хотите вернуться? (укажите дату в формате YYYY-MM или YYYY-MM-DD): ",
-    )
-    bot.set_state(message.from_user.id, CheapestTicketsInfoState.return_at)
+# @bot.callback_query_handler(func=lambda call: call.data == "yes")
+# @bot.message_handler(state=CheapestTicketsInfoState.ask_return)
+# def set_state_return_at(message: Message) -> None:
+#     bot.send_message(
+#         message.from_user.id,
+#         "Когда хотите вернуться? (укажите дату в формате YYYY-MM или YYYY-MM-DD): ",
+#     )
+#     bot.set_state(message.from_user.id, CheapestTicketsInfoState.return_at)
 
 
 # TODO добавить проверки, чтобы дата возвращения была позже даты вылета, обратить внимание, что дата возвращения или
@@ -109,7 +112,7 @@ def set_state_return_at(message: Message) -> None:
 @bot.message_handler(state=CheapestTicketsInfoState.return_at)
 def get_return_at(message: Message) -> None:
     if check_date(message.text):
-        bot.send_message(message.from_user.id, "Сколько вариантов показать?")
+        bot.send_message(message.from_user.id, "Сколько вариантов показать? (не более 5)")
         bot.set_state(
             message.from_user.id, CheapestTicketsInfoState.limit, message.chat.id
         )
