@@ -4,6 +4,7 @@ from config_data import TRAVELPAYOUTS_BASE_URL
 from typing import Optional
 
 
+# TODO добавить проверку, если название города будут вводить с маленькой буквы
 def get_city_iata_code(city_name: str) -> Optional[str]:
     """
     Метод для определения IATA-кода города
@@ -12,13 +13,13 @@ def get_city_iata_code(city_name: str) -> Optional[str]:
     :rtype: Optional[str]
     """
 
-    url = f'{TRAVELPAYOUTS_BASE_URL}{city_name}'
+    url = f"{TRAVELPAYOUTS_BASE_URL}{city_name}"
     response = requests.get(url=url)
 
     if response.status_code == 200:
         for city_data in response.json():
-            if city_data['name'] == city_name:
-                city_iata_code = city_data['code']
+            if city_data["name"] == city_name:
+                city_iata_code = city_data["code"]
                 return city_iata_code
     return None
 
@@ -31,11 +32,11 @@ def get_city_name_from_iata_code(city_iata_code: str) -> str:
     :rtype: str
     """
 
-    url = f'{TRAVELPAYOUTS_BASE_URL}{city_iata_code}'
+    url = f"{TRAVELPAYOUTS_BASE_URL}{city_iata_code}"
     response = requests.get(url=url)
 
     for city_data in response.json():
-        city_name = city_data['name']
+        city_name = city_data["name"]
         return city_name
 
 
@@ -47,13 +48,13 @@ def get_airport_name_from_iata_code(airport_iata_code: str) -> str:
     :rtype: str
     """
 
-    url = f'{TRAVELPAYOUTS_BASE_URL}{airport_iata_code}'
+    url = f"{TRAVELPAYOUTS_BASE_URL}{airport_iata_code}"
     response = requests.get(url=url)
 
     for airport_data in response.json():
-        if airport_data['type'] == 'city':
-            airport_name = airport_data['main_airport_name']
+        if airport_data["type"] == "city":
+            airport_name = airport_data["main_airport_name"]
         else:
-            airport_name = airport_data['name']
+            airport_name = airport_data["name"]
 
         return airport_name

@@ -41,6 +41,8 @@ def get_origin(message: Message) -> None:
     CheapestTicketsInfoState.origin. Также осуществляется проверка на корректность введенного города
     """
     if get_city_iata_code(message.text) is not None:
+        with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
+            ticket_data["origin"] = get_city_iata_code(message.text)
         departure_at_yes_no_markup(message)
         # bot.send_message(
         #     message.from_user.id,
@@ -52,9 +54,6 @@ def get_origin(message: Message) -> None:
         #     CheapestTicketsInfoState.ask_departure,
         #     message.chat.id,
         # )
-
-        with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
-            ticket_data["origin"] = get_city_iata_code(message.text)
 
     else:
         bot.send_message(
@@ -77,17 +76,15 @@ def get_origin(message: Message) -> None:
 @bot.message_handler(state=CheapestTicketsInfoState.departure_at)
 def get_departure_at(message: Message) -> None:
     if check_date(message.text):
+        with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
+            ticket_data["departure_at"] = message.text
         return_at_yes_no_markup(message)
         # bot.send_message(
         #     message.from_user.id,
         #     "Хотите указать дату возвращения?",
         #     reply_markup=departure_at_yes_no_markup(),
         # )
-        # TODO надо разобраться со состояниями и call.data, при нажатии "да" бот спрашивает дату отправления,
-        #  а не возвращения
-
-        with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
-            ticket_data["departure_at"] = message.text
+        # TODO надо разобраться с состояниями и call.data
 
     # elif message.text is None:
     #     return_at_yes_no_markup(message)
@@ -95,7 +92,7 @@ def get_departure_at(message: Message) -> None:
     else:
         bot.send_message(
             message.from_user.id,
-            "Проверьте правильность введенной даты: формат даты должен быть "
+            "Проверьте правильность введенной даты отправления: формат даты должен быть "
             "YYYY-MM или YYYY-MM-DD, на прошедшие даты поиск не возможен.",
         )
 
@@ -115,14 +112,25 @@ def get_departure_at(message: Message) -> None:
 @bot.message_handler(state=CheapestTicketsInfoState.return_at)
 def get_return_at(message: Message) -> None:
     if check_date(message.text):
-        bot.send_message(message.from_user.id, "Сколько вариантов показать? (не более 5)")
-        bot.set_state(
-            message.from_user.id, CheapestTicketsInfoState.limit, message.chat.id
-        )
-
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
-            ticket_data["return_at"] = message.text
-
+            if ticket_data["departure_at"] is not None:
+                if ticket_data["departure_at"] > message.text:
+                    bot.send_message(
+                        message.from_user.id,
+                        "Дата возвращения не может быть раньше, чем дата отправления!",
+                    )
+                else:
+                    ticket_data["return_at"] = message.text
+            else:
+                ticket_data["return_at"] = message.text
+                bot.send_message(
+                    message.from_user.id, "Сколько вариантов показать? (не более 5)"
+                )
+                bot.set_state(
+                    message.from_user.id,
+                    CheapestTicketsInfoState.limit,
+                    message.chat.id,
+                )
     # elif message.text is None:
     #     bot.send_message(message.from_user.id, "Сколько вариантов показать? (не более 5)")
     #     bot.set_state(
@@ -132,29 +140,28 @@ def get_return_at(message: Message) -> None:
     else:
         bot.send_message(
             message.from_user.id,
-            "Проверьте правильность введенной даты: формат даты должен быть "
+            "Проверьте правильность введенной даты возвращения: формат даты должен быть "
             "YYYY-MM или YYYY-MM-DD, на прошедшие даты поиск не возможен.",
         )
 
 
-@bot.message_handler(state=CheapestTicketsInfoState.pre_limit)
-def get_return_at(message: Message) -> None:
+# @bot.message_handler(state=CheapestTicketsInfoState.pre_limit)
+# def pre_get_limit(message: Message) -> None:
+#
+#     bot.set_state(
+#         message.from_user.id, CheapestTicketsInfoState.limit, message.chat.id
+#     )
 
-    bot.send_message(message.from_user.id, "Сколько вариантов показать? (не более 5)")
-    bot.set_state(
-        message.from_user.id, CheapestTicketsInfoState.limit, message.chat.id
-    )
 
-
+# TODO попробовать сделать каждый билет в отдельном сообщении, а ссылку сделать инлайн-кнопкой + увел-ть кол-во до 10
 @bot.message_handler(state=CheapestTicketsInfoState.limit)
 def get_limit(message: Message) -> None:
-    if message.text.isdigit():
+    if message.text.isdigit() and 0 < int(message.text) <= 5:
+        with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
+            ticket_data["limit"] = message.text
         bot.send_message(
             message.from_user.id, "Отлично! Вся информация есть, ищу билеты..."
         )
-
-        with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
-            ticket_data["limit"] = message.text
 
         tickets = send_request_top_cheapest_tickets(
             ticket_data["origin"],
@@ -165,6 +172,13 @@ def get_limit(message: Message) -> None:
 
         bot.send_message(message.chat.id, pretty_response_top_cheapest_tickets(tickets))
         bot.delete_state(message.from_user.id, message.chat.id)
+
+    else:
+        bot.send_message(
+            message.from_user.id,
+            "Проверьте правильность введенного количества вариантов, должно быть "
+            "не более 5.",
+        )
 
 
 # tickets = send_request_top_cheapest_tickets(origin="GSV", limit=10)
