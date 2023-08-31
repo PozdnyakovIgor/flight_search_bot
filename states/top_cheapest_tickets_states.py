@@ -9,5 +9,5 @@ class CheapestTicketsInfoState(StatesGroup):
     departure_at = State()
     return_at = State()
     limit = State()
-    ask_departure = State()
+    pre_limit = State()
     ask_return = State()

@@ -89,6 +89,9 @@ def get_departure_at(message: Message) -> None:
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
             ticket_data["departure_at"] = message.text
 
+    # elif message.text is None:
+    #     return_at_yes_no_markup(message)
+
     else:
         bot.send_message(
             message.from_user.id,
@@ -120,12 +123,27 @@ def get_return_at(message: Message) -> None:
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
             ticket_data["return_at"] = message.text
 
+    # elif message.text is None:
+    #     bot.send_message(message.from_user.id, "Сколько вариантов показать? (не более 5)")
+    #     bot.set_state(
+    #         message.from_user.id, CheapestTicketsInfoState.limit, message.chat.id
+    #     )
+
     else:
         bot.send_message(
             message.from_user.id,
             "Проверьте правильность введенной даты: формат даты должен быть "
             "YYYY-MM или YYYY-MM-DD, на прошедшие даты поиск не возможен.",
         )
+
+
+@bot.message_handler(state=CheapestTicketsInfoState.pre_limit)
+def get_return_at(message: Message) -> None:
+
+    bot.send_message(message.from_user.id, "Сколько вариантов показать? (не более 5)")
+    bot.set_state(
+        message.from_user.id, CheapestTicketsInfoState.limit, message.chat.id
+    )
 
 
 @bot.message_handler(state=CheapestTicketsInfoState.limit)

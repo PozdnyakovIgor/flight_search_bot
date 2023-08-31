@@ -1,3 +1,4 @@
+from keyboards.inline.return_at_yes_no_keyboard import return_at_yes_no_markup
 from loader import bot
 from telebot.types import CallbackQuery
 from states.top_cheapest_tickets_states import CheapestTicketsInfoState
@@ -18,9 +19,12 @@ def need_departure_at_callback(call: CallbackQuery) -> None:
             call.message.chat.id,
             "Введите дату отправления (в формате YYYY-MM или YYYY-MM-DD): ",
         )
+
     elif call.data == "departure_at_no":
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        pass
+        bot.set_state(call.message.chat.id, CheapestTicketsInfoState.departure_at)
+        return_at_yes_no_markup(call.message)
+
     elif call.data == "return_at_yes":
         bot.delete_message(call.message.chat.id, call.message.message_id)
         bot.set_state(call.message.chat.id, CheapestTicketsInfoState.return_at)
@@ -28,6 +32,8 @@ def need_departure_at_callback(call: CallbackQuery) -> None:
             call.message.chat.id,
             "Когда хотите вернуться? (укажите дату в формате YYYY-MM или YYYY-MM-DD): ",
         )
+
     elif call.data == "return_at_no":
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        pass
+        bot.set_state(call.message.chat.id, CheapestTicketsInfoState.pre_limit)
+        # return call.message.text is None
