@@ -3,34 +3,25 @@ from states.top_cheapest_tickets_states import CheapestTicketsInfoState
 from telebot.types import Message
 from api_engine.api_aviasales_engine import (
     send_request_top_cheapest_tickets,
-    pretty_response_top_cheapest_tickets,
     one_ticket_pretty,
 )
-from api_engine.api_travelpayouts_engine import (
-    get_city_iata_code,
-    get_city_name_from_iata_code,
-    get_airport_name_from_iata_code,
-)
-from utils.check_date import check_date, format_date
+from api_engine.api_travelpayouts_engine import get_city_iata_code
+from utils.check_date import check_date
 
 from keyboards.inline.departure_at_yes_no_keyboard import departure_at_yes_no_markup
 from keyboards.inline.return_at_yes_no_keyboard import return_at_yes_no_markup
 from keyboards.inline.url_button import make_url_button
-
-import json
-import requests
-
-# tickets = send_request_top_cheapest_tickets(origin='MOW', departure_at='2023-09-01', return_at='2023-09-14', limit=10)
-# tickets = send_request_top_cheapest_tickets(origin='MOW', departure_at='2023-09-01', limit=10)
 
 
 @bot.message_handler(commands=["top_cheapest_tickets"])
 def top_cheapest_tickets(message: Message) -> None:
     """
     Команда для поиска самых дешевых билетов из заданного города. Можно указать даты вылета и/или прилета.
-
-
+    Здесь задается состояние origin
+    :param message: Message
+    :return: None
     """
+
     bot.set_state(
         message.from_user.id, CheapestTicketsInfoState.origin, message.chat.id
     )
@@ -44,7 +35,10 @@ def top_cheapest_tickets(message: Message) -> None:
 def get_origin(message: Message) -> None:
     """
     Метод, в котором обрабатываем сообщение с городом отправления, если состояние пользователя
-    CheapestTicketsInfoState.origin. Также осуществляется проверка на корректность введенного города
+    CheapestTicketsInfoState.origin. Также осуществляется проверка на корректность введенного города и появляется
+    инлайн-клавиатура с вопросом хочет ли пользователь ввести дату вылета
+    :param message: Message
+    :return: None
     """
     if get_city_iata_code(message.text) is not None:
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
@@ -61,6 +55,13 @@ def get_origin(message: Message) -> None:
 
 @bot.message_handler(state=CheapestTicketsInfoState.departure_at)
 def get_departure_at(message: Message) -> None:
+    """
+    Метод, в котором обрабатываем сообщение с датой вылета (если она была указана), если состояние пользователя
+    CheapestTicketsInfoState.departure_at. Также осуществляется проверка на корректность введенной даты вылета и
+    появляется инлайн-клавиатура с вопросом хочет ли пользователь ввести дату возвращения
+    :param message: Message
+    :return: None
+    """
     if check_date(message.text):
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
             ticket_data["departure_at"] = message.text
@@ -76,6 +77,13 @@ def get_departure_at(message: Message) -> None:
 
 @bot.message_handler(state=CheapestTicketsInfoState.return_at)
 def get_return_at(message: Message) -> None:
+    """
+    Метод, в котором обрабатываем сообщение с датой прилета (если она была указана), если состояние пользователя
+    CheapestTicketsInfoState.return_at. Также осуществляется проверка на корректность введенной даты возвращения и
+    задается вопрос о кол-ве билетов в ответе.
+    :param message: Message
+    :return: None
+    """
     if check_date(message.text):
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
             if (
@@ -105,9 +113,14 @@ def get_return_at(message: Message) -> None:
         )
 
 
-# TODO попробовать сделать каждый билет в отдельном сообщении, а ссылку сделать инлайн-кнопкой + увел-ть кол-во до 10
 @bot.message_handler(state=CheapestTicketsInfoState.limit)
 def get_limit(message: Message) -> None:
+    """
+    Метод, в котором обрабатываем сообщение с кол-ом билетов, необходимым для вывода, если состояние пользователя
+    CheapestTicketsInfoState.limit, выдаем ответ и сбрасываем состояние.
+    :param message:
+    :return:
+    """
     if message.text.isdigit() and 0 < int(message.text) <= 10:
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
             ticket_data["limit"] = message.text
@@ -136,20 +149,11 @@ def get_limit(message: Message) -> None:
         else:
             bot.send_message(message.chat.id, "В кэше не найдено таких билетов :(")
 
+        bot.delete_state(message.from_user.id, message.chat.id)
+
     else:
         bot.send_message(
             message.from_user.id,
             "Проверьте правильность введенного количества вариантов, должно быть "
             "не более 10.",
         )
-
-
-# tickets = send_request_top_cheapest_tickets(origin="GSV", limit=10)
-# data = pretty_response_top_cheapest_tickets(tickets)
-#
-# with open("top_cheapest_tickets.json", "w", encoding="utf-8") as file:
-#     json.dump(tickets, file, indent=4, ensure_ascii=False)
-#
-#
-# with open("top_cheapest_tickets.txt", "w", encoding="utf-8") as file:
-#     file.write(data)

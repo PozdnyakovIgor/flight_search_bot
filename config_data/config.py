@@ -14,9 +14,9 @@ DEFAULT_COMMANDS = (
     ("want_ticket", "поиск билетов с конкретными датами вылета/прилета"),
     ("top_cheapest_tickets", "поиск самых дешевых билетов из заданного города"),
     ("nearest_airports", "вывод ближайших аэропортов"),
-    ("history", "история поиска авиабилетов")
+    ("history", "история поиска авиабилетов"),
 )
 
-AVIASALES_BASE_URL = 'https://api.travelpayouts.com/aviasales/'
+AVIASALES_BASE_URL = "https://api.travelpayouts.com/aviasales/"
 
-TRAVELPAYOUTS_BASE_URL = 'https://autocomplete.travelpayouts.com/places2?locale=ru&types[]=airport&types[]=city&term='
+TRAVELPAYOUTS_BASE_URL = "https://autocomplete.travelpayouts.com/places2?locale=ru&types[]=airport&types[]=city&term="

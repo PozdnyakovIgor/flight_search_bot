@@ -4,7 +4,6 @@ from config_data import TRAVELPAYOUTS_BASE_URL
 from typing import Optional
 
 
-# TODO добавить проверку, если название города будут вводить с маленькой буквы
 def get_city_iata_code(city_name: str) -> Optional[str]:
     """
     Метод для определения IATA-кода города

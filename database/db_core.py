@@ -3,7 +3,7 @@ from datetime import datetime
 
 from peewee import *
 
-db = SqliteDatabase('users_history.db')
+db = SqliteDatabase("users_history.db")
 
 
 class BaseModel(Model):
@@ -17,7 +17,7 @@ class Users(BaseModel):
 
 
 class History(BaseModel):
-    user = ForeignKeyField(Users, related_name='')
+    user = ForeignKeyField(Users, related_name="")
     link = CharField()
     info = CharField()
     date = DateField()
@@ -42,7 +42,9 @@ def add_user_to_database(name: str, nickname: str) -> Model:
         return new_user
 
 
-def add_tickets_search_to_history(nickname: str, link: str, info: str, date: str | datetime) -> None:
+def add_tickets_search_to_history(
+    nickname: str, link: str, info: str, date: str | datetime
+) -> None:
     """
     Функция для добавления билета в историю поиска
     :param nickname: никнейм пользователя
@@ -50,7 +52,9 @@ def add_tickets_search_to_history(nickname: str, link: str, info: str, date: str
     :param info: краткая информация о билете
     :param date: дата поиска
     """
-    History.create(user=Users.select().where(Users.nickname == nickname).get(),
-                   link=link,
-                   info=info,
-                   date=date).save()
+    History.create(
+        user=Users.select().where(Users.nickname == nickname).get(),
+        link=link,
+        info=info,
+        date=date,
+    ).save()

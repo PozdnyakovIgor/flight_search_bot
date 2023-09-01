@@ -5,9 +5,11 @@ from states.top_cheapest_tickets_states import CheapestTicketsInfoState
 
 
 @bot.callback_query_handler(func=lambda call: True)
-def need_departure_at_callback(call: CallbackQuery) -> None:
+def enter_date_callback(call: CallbackQuery) -> None:
     """
-    Пользователь нажал кнопку "Да" или "Нет"
+
+    Пользователь нажал кнопку "Да" или "Нет". В зависимости от ответа пользователю предлагается ввести дату
+    отправления/прибытия
     :param call: 'yes' or 'no'
     :return: None
     """
