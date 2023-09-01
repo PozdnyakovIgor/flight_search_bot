@@ -5,11 +5,16 @@ from api_engine.api_aviasales_engine import (
     send_request_top_cheapest_tickets,
     pretty_response_top_cheapest_tickets,
 )
-from api_engine.api_travelpayouts_engine import get_city_iata_code
-from utils.check_date import check_date
+from api_engine.api_travelpayouts_engine import (
+    get_city_iata_code,
+    get_city_name_from_iata_code,
+    get_airport_name_from_iata_code,
+)
+from utils.check_date import check_date, format_date
 
 from keyboards.inline.departure_at_yes_no_keyboard import departure_at_yes_no_markup
 from keyboards.inline.return_at_yes_no_keyboard import return_at_yes_no_markup
+from keyboards.inline.url_button import make_url_button
 
 import json
 import requests
@@ -44,16 +49,6 @@ def get_origin(message: Message) -> None:
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
             ticket_data["origin"] = get_city_iata_code(message.text)
         departure_at_yes_no_markup(message)
-        # bot.send_message(
-        #     message.from_user.id,
-        #     "Хотите указать дату отправления?",
-        #     reply_markup=departure_at_yes_no_markup(),
-        # )
-        # bot.set_state(
-        #     message.from_user.id,
-        #     CheapestTicketsInfoState.ask_departure,
-        #     message.chat.id,
-        # )
 
     else:
         bot.send_message(
@@ -63,31 +58,12 @@ def get_origin(message: Message) -> None:
         )
 
 
-# @bot.callback_query_handler(func=lambda call: call.data == "yes")
-# @bot.message_handler(state=CheapestTicketsInfoState.departure_at)
-# def set_state_departure_at(message: Message) -> None:
-#     bot.send_message(
-#         message.from_user.id,
-#         "Введите дату отправления (в формате YYYY-MM или YYYY-MM-DD): ",
-#     )
-#     bot.set_state(message.from_user.id, CheapestTicketsInfoState.ask_return)
-
-
 @bot.message_handler(state=CheapestTicketsInfoState.departure_at)
 def get_departure_at(message: Message) -> None:
     if check_date(message.text):
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
             ticket_data["departure_at"] = message.text
         return_at_yes_no_markup(message)
-        # bot.send_message(
-        #     message.from_user.id,
-        #     "Хотите указать дату возвращения?",
-        #     reply_markup=departure_at_yes_no_markup(),
-        # )
-        # TODO надо разобраться с состояниями и call.data
-
-    # elif message.text is None:
-    #     return_at_yes_no_markup(message)
 
     else:
         bot.send_message(
@@ -97,45 +73,28 @@ def get_departure_at(message: Message) -> None:
         )
 
 
-# @bot.callback_query_handler(func=lambda call: call.data == "yes")
-# @bot.message_handler(state=CheapestTicketsInfoState.ask_return)
-# def set_state_return_at(message: Message) -> None:
-#     bot.send_message(
-#         message.from_user.id,
-#         "Когда хотите вернуться? (укажите дату в формате YYYY-MM или YYYY-MM-DD): ",
-#     )
-#     bot.set_state(message.from_user.id, CheapestTicketsInfoState.return_at)
-
-
-# TODO добавить проверки, чтобы дата возвращения была позже даты вылета, обратить внимание, что дата возвращения или
-#  вылета может быть не указана
 @bot.message_handler(state=CheapestTicketsInfoState.return_at)
 def get_return_at(message: Message) -> None:
     if check_date(message.text):
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
-            if ticket_data["departure_at"] is not None:
-                if ticket_data["departure_at"] > message.text:
-                    bot.send_message(
-                        message.from_user.id,
-                        "Дата возвращения не может быть раньше, чем дата отправления!",
-                    )
-                else:
-                    ticket_data["return_at"] = message.text
+            if (
+                ticket_data["departure_at"] is not None
+                and ticket_data["departure_at"] > message.text
+            ):
+                bot.send_message(
+                    message.from_user.id,
+                    "Дата возвращения не может быть раньше, чем дата отправления!",
+                )
             else:
                 ticket_data["return_at"] = message.text
                 bot.send_message(
-                    message.from_user.id, "Сколько вариантов показать? (не более 5)"
+                    message.from_user.id, "Сколько вариантов показать? (не более 10)"
                 )
                 bot.set_state(
                     message.from_user.id,
                     CheapestTicketsInfoState.limit,
                     message.chat.id,
                 )
-    # elif message.text is None:
-    #     bot.send_message(message.from_user.id, "Сколько вариантов показать? (не более 5)")
-    #     bot.set_state(
-    #         message.from_user.id, CheapestTicketsInfoState.limit, message.chat.id
-    #     )
 
     else:
         bot.send_message(
@@ -145,18 +104,10 @@ def get_return_at(message: Message) -> None:
         )
 
 
-# @bot.message_handler(state=CheapestTicketsInfoState.pre_limit)
-# def pre_get_limit(message: Message) -> None:
-#
-#     bot.set_state(
-#         message.from_user.id, CheapestTicketsInfoState.limit, message.chat.id
-#     )
-
-
 # TODO попробовать сделать каждый билет в отдельном сообщении, а ссылку сделать инлайн-кнопкой + увел-ть кол-во до 10
 @bot.message_handler(state=CheapestTicketsInfoState.limit)
 def get_limit(message: Message) -> None:
-    if message.text.isdigit() and 0 < int(message.text) <= 5:
+    if message.text.isdigit() and 0 < int(message.text) <= 10:
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
             ticket_data["limit"] = message.text
         bot.send_message(
@@ -170,14 +121,53 @@ def get_limit(message: Message) -> None:
             ticket_data["limit"],
         )
 
-        bot.send_message(message.chat.id, pretty_response_top_cheapest_tickets(tickets))
-        bot.delete_state(message.from_user.id, message.chat.id)
+        # bot.send_message(message.chat.id, pretty_response_top_cheapest_tickets(tickets))
+        one_ticket = ""
+        if len(tickets["data"]):
+            tickets = tickets["data"]
+            for ticket in tickets:
+                one_ticket += (
+                    f"Город отправления: "
+                    f'{get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]})\n'
+                    f"Аэропорт отправления: "
+                    f'{get_airport_name_from_iata_code(ticket["origin_airport"])} ({ticket["origin_airport"]})\n'
+                    f"Город прибытия: "
+                    f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]})\n'
+                    f"Аэропорт прибытия: "
+                    f'{get_airport_name_from_iata_code(ticket["destination_airport"])} '
+                    f'({ticket["destination_airport"]})\n'
+                    f"Дата и время вылета из пункта отправления: "
+                    f'{format_date(ticket["departure_at"])}\n'
+                )
+                if "return_at" in ticket:
+                    tickets += (
+                        f"Дата и время обратного рейса: "
+                        f'{format_date(ticket["return_at"])}\n'
+                    )
+
+                one_ticket += (
+                    f'Цена (руб): {ticket["price"]}\n'
+                    # f"Ссылка на билет: https://www.aviasales.ru"
+                    # + ticket["link"]
+                    # + "\n\n"
+                )
+
+                bot.send_message(
+                    message.chat.id,
+                    one_ticket,
+                    reply_markup=make_url_button(
+                        f"https://www.aviasales.ru" f'{ticket["link"]}'
+                    ),
+                )
+                one_ticket = ""
+        else:
+            bot.send_message(message.chat.id, "В кэше не найдено таких билетов :(")
 
     else:
         bot.send_message(
             message.from_user.id,
             "Проверьте правильность введенного количества вариантов, должно быть "
-            "не более 5.",
+            "не более 10.",
         )
 
 
