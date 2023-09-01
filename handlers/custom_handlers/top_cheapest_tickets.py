@@ -4,6 +4,7 @@ from telebot.types import Message
 from api_engine.api_aviasales_engine import (
     send_request_top_cheapest_tickets,
     pretty_response_top_cheapest_tickets,
+    one_ticket_pretty,
 )
 from api_engine.api_travelpayouts_engine import (
     get_city_iata_code,
@@ -121,45 +122,17 @@ def get_limit(message: Message) -> None:
             ticket_data["limit"],
         )
 
-        # bot.send_message(message.chat.id, pretty_response_top_cheapest_tickets(tickets))
-        one_ticket = ""
         if len(tickets["data"]):
             tickets = tickets["data"]
-            for ticket in tickets:
-                one_ticket += (
-                    f"Город отправления: "
-                    f'{get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]})\n'
-                    f"Аэропорт отправления: "
-                    f'{get_airport_name_from_iata_code(ticket["origin_airport"])} ({ticket["origin_airport"]})\n'
-                    f"Город прибытия: "
-                    f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]})\n'
-                    f"Аэропорт прибытия: "
-                    f'{get_airport_name_from_iata_code(ticket["destination_airport"])} '
-                    f'({ticket["destination_airport"]})\n'
-                    f"Дата и время вылета из пункта отправления: "
-                    f'{format_date(ticket["departure_at"])}\n'
-                )
-                if "return_at" in ticket:
-                    tickets += (
-                        f"Дата и время обратного рейса: "
-                        f'{format_date(ticket["return_at"])}\n'
-                    )
-
-                one_ticket += (
-                    f'Цена (руб): {ticket["price"]}\n'
-                    # f"Ссылка на билет: https://www.aviasales.ru"
-                    # + ticket["link"]
-                    # + "\n\n"
-                )
-
+            for ticket in tickets:  # прочитать про for-else
                 bot.send_message(
                     message.chat.id,
-                    one_ticket,
+                    one_ticket_pretty(ticket),
                     reply_markup=make_url_button(
                         f"https://www.aviasales.ru" f'{ticket["link"]}'
                     ),
                 )
-                one_ticket = ""
+
         else:
             bot.send_message(message.chat.id, "В кэше не найдено таких билетов :(")
 

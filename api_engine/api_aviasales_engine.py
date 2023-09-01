@@ -194,39 +194,30 @@ def pretty_response_top_cheapest_tickets(response: json) -> str:
     return tickets
 
 
-# def tickets_number(response: json) -> int:
-#     if len(response["data"]):
-#         return len(response["data"])
-#
-#
-# def pretty_response_one_ticket(response: json) -> str:
-#
-#     if len(response["data"]):
-#         response = response["data"]
-#         for ticket in response:
-#             one_ticket = ""
-#             one_ticket += (
-#                 f"Город отправления: "
-#                 f'{get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]})\n'
-#                 f"Аэропорт отправления: "
-#                 f'{get_airport_name_from_iata_code(ticket["origin_airport"])} ({ticket["origin_airport"]})\n'
-#                 f"Город прибытия: "
-#                 f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]})\n'
-#                 f"Аэропорт прибытия: "
-#                 f'{get_airport_name_from_iata_code(ticket["destination_airport"])} '
-#                 f'({ticket["destination_airport"]})\n'
-#                 f"Дата и время вылета из пункта отправления: "
-#                 f'{format_date(ticket["departure_at"])}\n'
-#             )
-#             if "return_at" in ticket:
-#                 one_ticket += (
-#                     f"Дата и время обратного рейса: "
-#                     f'{format_date(ticket["return_at"])}\n'
-#                 )
-#
-#             one_ticket += (
-#                 f'Цена (руб): {ticket["price"]}\n'
-#                 f"Ссылка на билет: https://www.aviasales.ru" + ticket["link"] + "\n\n"
-#             )
-#             return one_ticket
-#         one_ticket = ""
+def one_ticket_pretty(ticket):
+    one_ticket = ''
+    one_ticket += (
+        f"Город отправления: "
+        f'{get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]})\n'
+        f"Аэропорт отправления: "
+        f'{get_airport_name_from_iata_code(ticket["origin_airport"])} ({ticket["origin_airport"]})\n'
+        f"Город прибытия: "
+        f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]})\n'
+        f"Аэропорт прибытия: "
+        f'{get_airport_name_from_iata_code(ticket["destination_airport"])} '
+        f'({ticket["destination_airport"]})\n'
+        f"Дата и время вылета из пункта отправления: "
+        f'{format_date(ticket["departure_at"])}\n'
+    )
+    if "return_at" in ticket:
+        one_ticket += (
+            f"Дата и время обратного рейса: "
+            f'{format_date(ticket["return_at"])}\n'
+        )
+    one_ticket += (
+        f'Цена (руб): {ticket["price"]}\n'
+        # f"Ссылка на билет: https://www.aviasales.ru"
+        # + ticket["link"]
+        # + "\n\n"
+    )
+    return one_ticket
