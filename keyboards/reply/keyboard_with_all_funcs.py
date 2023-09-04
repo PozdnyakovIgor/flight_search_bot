@@ -11,7 +11,7 @@ def starting_keyboard() -> ReplyKeyboardMarkup:
     markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     keys = [KeyboardButton('/want_ticket'),
             KeyboardButton('/top_cheapest_tickets'),
-            KeyboardButton('/nearest_airports'),
+            KeyboardButton('/popular_directions'),
             KeyboardButton('/history'),
             KeyboardButton('/help')
             ]

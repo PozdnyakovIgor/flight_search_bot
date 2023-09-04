@@ -1,4 +1,6 @@
 import json
+from typing import Any
+
 import requests
 
 from config_data import AVIASALES_API_TOKEN, AVIASALES_BASE_URL
@@ -203,3 +205,37 @@ def one_ticket_pretty(ticket):
         )
     one_ticket += f'Цена (руб): {ticket["price"]}\n'
     return one_ticket
+
+
+def build_url_popular_directions(origin: str) -> str:
+    """
+    Конструктор запроса для функции popular_directions
+    :param origin: город отправления
+    :return: url
+    :rtype: str
+    """
+    url = f"http://api.travelpayouts.com/v1/city-directions?origin={origin}&currency=rub&token={AVIASALES_API_TOKEN}"
+    return url
+
+
+def send_request_popular_directions(origin: str) -> json:
+    """
+    Метод для отправки запроса и получения информации о популярных направлениях из города для ф-ии popular_directions
+    :param origin: город отправления
+    :return: response
+    :rtype: json
+    """
+    response = requests.get(url=build_url_popular_directions(origin)).json()
+    return response
+
+
+# TODO взять города из response. Подумать, что возвращать, если выбран, например, закрытый аэропорт
+def get_popular_directions(response: json) -> Any:
+    if len(response["data"]):
+        cities = list()
+        response = response["data"]
+        for city in response:
+            cities.append(city)
+
+    else:
+        tickets = "Из данного города нет популярных направлений. Возможно, аэропорт этого города закрыт."
