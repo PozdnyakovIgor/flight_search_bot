@@ -51,7 +51,7 @@ def get_airport_name_from_iata_code(airport_iata_code: str) -> str:
     response = requests.get(url=url)
 
     for airport_data in response.json():
-        if airport_data["type"] == "city":
+        if airport_data["type"] == "city" and airport_data["main_airport_name"] is not None:
             airport_name = airport_data["main_airport_name"]
         else:
             airport_name = airport_data["name"]
