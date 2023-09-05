@@ -21,7 +21,7 @@ def top_cheapest_tickets(message: Message) -> None:
     :param message: Message
     :return: None
     """
-
+ 
     bot.set_state(
         message.from_user.id, CheapestTicketsInfoState.origin, message.chat.id
     )

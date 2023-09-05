@@ -8,12 +8,12 @@ from utils.check_date import check_date
 
 @bot.message_handler(commands=['want_ticket'])
 def want_to_find_a_ticket(message: Message) -> None:
+
     """
     Команда для поиска билетов с заданными городами отправления и прибытия, с заданными датами отправления и прибытия.
     Здесь задается состояние origin
 
     """
-
     bot.set_state(message.from_user.id, TicketInfoState.origin, message.chat.id)
     bot.send_message(message.from_user.id, f'Отлично! Укажите, откуда Вы бы хотели полететь?')
 
@@ -27,6 +27,7 @@ def get_origin(message: Message) -> None:
     """
 
     if get_city_iata_code(message.text) is not None:
+        bot.delete_state(message.from_user.id, message.chat.id)
         bot.send_message(message.from_user.id, 'Теперь введите город назначения:')
         bot.set_state(message.from_user.id, TicketInfoState.destination, message.chat.id)
 
@@ -34,6 +35,7 @@ def get_origin(message: Message) -> None:
             ticket_data['origin'] = get_city_iata_code(message.text)
 
     else:
+        bot.delete_state(message.from_user.id, message.chat.id)
         bot.send_message(message.from_user.id, 'В данном городе нет аэропорта, либо Вы ввели название города с '
                                                'ошибкой. Введите название города:')
 

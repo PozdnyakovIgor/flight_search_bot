@@ -232,10 +232,13 @@ def send_request_popular_directions(origin: str) -> json:
 # TODO взять города из response. Подумать, что возвращать, если выбран, например, закрытый аэропорт
 def get_popular_directions(response: json) -> Any:
     if len(response["data"]):
-        cities = list()
+        cities = dict()
         response = response["data"]
         for city in response:
-            cities.append(city)
+            if len(cities) < 10:
+                cities[city] = get_city_name_from_iata_code(city)
 
     else:
-        tickets = "Из данного города нет популярных направлений. Возможно, аэропорт этого города закрыт."
+        cities = "Из данного города нет популярных направлений. Возможно, аэропорт этого города закрыт."
+
+    return cities
