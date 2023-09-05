@@ -1,5 +1,5 @@
 import json
-from typing import Any
+from typing import Any, Optional
 
 import requests
 
@@ -229,16 +229,19 @@ def send_request_popular_directions(origin: str) -> json:
     return response
 
 
-# TODO взять города из response. Подумать, что возвращать, если выбран, например, закрытый аэропорт
-def get_popular_directions(response: json) -> Any:
+def get_popular_directions(response: json) -> Optional[dict]:
+    """
+    Метод для получения словаря вида {IATA-код города: название города}
+    :param response: json-объект с информацией о городах
+    :return: cities или None
+    :rtype: Optional[dict
+    """
     if len(response["data"]):
         cities = dict()
         response = response["data"]
         for city in response:
             if len(cities) < 10:
                 cities[city] = get_city_name_from_iata_code(city)
-
+        return cities
     else:
-        cities = "Из данного города нет популярных направлений. Возможно, аэропорт этого города закрыт."
-
-    return cities
+        return None

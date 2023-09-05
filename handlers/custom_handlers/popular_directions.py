@@ -1,3 +1,4 @@
+from keyboards.inline.url_button import make_url_button
 from loader import bot
 from states.popular_directions_states import PopularDirectionsState
 from telebot.types import Message, CallbackQuery
@@ -5,16 +6,22 @@ from api_engine import get_city_iata_code, get_city_name_from_iata_code
 from api_engine.api_aviasales_engine import (
     send_request_popular_directions,
     get_popular_directions,
+    send_request,
+    one_ticket_pretty,
 )
-from keyboards.inline.cities_keyboard import show_cities_keyboard
-from keyboards.inline.departure_at_yes_no_keyboard import departure_at_yes_no_markup
+from keyboards.inline.popular_directions_keyboards.cities_keyboard import (
+    show_cities_keyboard,
+)
+from keyboards.inline.popular_directions_keyboards.departure_at_yes_no_kb import (
+    departure_at_yes_no_markup,
+)
+from keyboards.inline.popular_directions_keyboards.return_at_yes_no_kb import (
+    return_at_yes_no_markup,
+)
+from utils.check_date import check_date
 
-from config_data.config import AVIASALES_API_TOKEN
-import requests
-import json
 
-
-@bot.message_handler(commands=['popular_directions'])
+@bot.message_handler(commands=["popular_directions"])
 def popular_directions(message: Message) -> None:
     """
     Команда для поиска популярных направлений из заданного города. При вводе города отправления появляется
@@ -24,7 +31,10 @@ def popular_directions(message: Message) -> None:
     """
 
     bot.set_state(message.from_user.id, PopularDirectionsState.origin, message.chat.id)
-    bot.send_message(message.from_user.id, f'Самые популярные направления из какого города Вам показать?')
+    bot.send_message(
+        message.from_user.id,
+        f"Самые популярные направления из какого города Вам показать?",
+    )
 
 
 @bot.message_handler(state=PopularDirectionsState.origin)
@@ -37,13 +47,25 @@ def get_origin(message: Message) -> None:
     :return: None
     """
     if get_city_iata_code(message.text) is not None:
-        bot.send_message(message.from_user.id, f'В работе...')
+        bot.send_message(message.from_user.id, f"В работе...")
         city_iata_code = get_city_iata_code(message.text)
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
             ticket_data["origin"] = city_iata_code
+        popular_directions_dict = get_popular_directions(
+            send_request_popular_directions(origin=city_iata_code)
+        )
 
-        show_cities_keyboard(message, get_popular_directions(send_request_popular_directions(origin=city_iata_code)))
-
+        if popular_directions_dict is not None:
+            show_cities_keyboard(
+                message,
+                popular_directions_dict,
+            )
+        else:
+            bot.send_message(
+                message.from_user.id,
+                "Из данного города нет популярных направлений. Возможно, аэропорт "
+                "этого города закрыт.",
+            )
     else:
         bot.send_message(
             message.from_user.id,
@@ -63,25 +85,152 @@ def city_iata_code_callback(call: CallbackQuery) -> None:
     if call.data:
         bot.delete_message(call.message.chat.id, call.message.message_id)
         with bot.retrieve_data(call.message.chat.id) as ticket_data:
-            ticket_data['destination'] = call.data
-            bot.send_message(call.message.chat.id, f"Выбран город прибытия: {get_city_name_from_iata_code(call.data)}")
+            ticket_data["destination"] = call.data
+            bot.send_message(
+                call.message.chat.id,
+                f"Выбран город прибытия: {get_city_name_from_iata_code(call.data)}",
+            )
     bot.set_state(call.message.chat.id, PopularDirectionsState.destination)
-    # создать новую инлайн-клаву да-нет
+    departure_at_yes_no_markup(call.message)
 
 
+@bot.callback_query_handler(
+    func=lambda call: call.data == "departure_yes" or call.data == "departure_no"
+)
+def enter_departure_at_callback(call: CallbackQuery) -> None:
+    """
+    Пользователь нажал кнопку "Да" или "Нет". В зависимости от ответа пользователю предлагается ввести дату
+    отправления
+    :param call: 'yes' or 'no'
+    :return: None
+    """
+
+    if call.data == "departure_yes":
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+        bot.set_state(call.message.chat.id, PopularDirectionsState.departure_at)
+        bot.send_message(
+            call.message.chat.id,
+            "Пожалуйста, введите дату отправления (в формате YYYY-MM или YYYY-MM-DD): ",
+        )
+
+    elif call.data == "departure_no":
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+        # bot.set_state(call.message.chat.id, PopularDirectionsState.departure_at)
+        with bot.retrieve_data(call.message.chat.id) as ticket_data:
+            ticket_data["departure_at"] = None
+        return_at_yes_no_markup(call.message)
 
 
-@bot.message_handler(state=PopularDirectionsState.destination)
-def get_destination(message: Message) -> None:
-    pass
+@bot.message_handler(state=PopularDirectionsState.departure_at)
+def get_departure_at(message: Message) -> None:
+    if check_date(message.text):
+        with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
+            ticket_data["departure_at"] = message.text
+        bot.set_state(message.chat.id, PopularDirectionsState.return_at)  # была закомменчена
+        return_at_yes_no_markup(message)
+
+    else:
+        bot.send_message(
+            message.from_user.id,
+            "Проверьте правильность введенной даты отправления: формат даты должен быть "
+            "YYYY-MM или YYYY-MM-DD, на прошедшие даты поиск не возможен.",
+        )
 
 
+@bot.callback_query_handler(
+    func=lambda call: call.data == "return_yes" or call.data == "return_no"
+)
+def enter_return_at_callback(call: CallbackQuery) -> None:
+    if call.data == "return_yes":
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+        bot.set_state(call.message.chat.id, PopularDirectionsState.return_at)
+        bot.send_message(
+            call.message.chat.id,
+            "Введите дату возвращения (в формате YYYY-MM или YYYY-MM-DD): ",
+        )
+    elif call.data == "return_no":
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+        bot.set_state(call.message.chat.id, PopularDirectionsState.limit)
+        with bot.retrieve_data(call.message.chat.id) as ticket_data:
+            ticket_data["return_at"] = None
+        bot.send_message(
+            call.message.chat.id, "Сколько вариантов Вам показать? (не более 10)"
+        )
 
 
-# url = f'http://api.travelpayouts.com/v1/city-directions?origin=VVO&currency=rub&token={AVIASALES_API_TOKEN}'
-# response = requests.get(url=url).json()
-# with open('popular.json', 'w', encoding='utf-8') as data:
-#     json.dump(response, data, indent=4,  ensure_ascii=False)
+@bot.message_handler(state=PopularDirectionsState.return_at)
+def get_return_at(message: Message) -> None:
+    if check_date(message.text):
+        with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
+            if (
+                ticket_data["departure_at"] is not None
+                and ticket_data["departure_at"] > message.text
+            ):
+                bot.send_message(
+                    message.from_user.id,
+                    "Дата возвращения не может быть раньше, чем дата отправления!",
+                )
+            else:
+                ticket_data["return_at"] = message.text
+                bot.send_message(
+                    message.from_user.id, "Сколько вариантов показать? (не более 10)"
+                )
+                bot.set_state(
+                    message.from_user.id,
+                    PopularDirectionsState.limit,
+                    message.chat.id,
+                )
+
+    else:
+        bot.send_message(
+            message.from_user.id,
+            "Проверьте правильность введенной даты возвращения: формат даты должен быть "
+            "YYYY-MM или YYYY-MM-DD, на прошедшие даты поиск не возможен.",
+        )
 
 
+@bot.message_handler(state=PopularDirectionsState.limit)
+def get_limit(message: Message) -> None:
+    if message.text.isdigit() and 0 < int(message.text) <= 10:
+        with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
+            ticket_data["limit"] = message.text
+            requested_tickets_number = ticket_data["limit"]
+        bot.send_message(
+            message.from_user.id, "Отлично! Вся информация есть, ищу билеты..."
+        )
 
+        tickets = send_request(
+            ticket_data["origin"],
+            ticket_data["destination"],
+            ticket_data["departure_at"],
+            ticket_data["return_at"],
+            ticket_data["limit"],
+        )
+
+        if len(tickets["data"]):
+            tickets = tickets["data"]
+            for ticket in tickets:  # прочитать про for-else
+                bot.send_message(
+                    message.chat.id,
+                    one_ticket_pretty(ticket),
+                    reply_markup=make_url_button(
+                        f"https://www.aviasales.ru" f'{ticket["link"]}'
+                    ),
+                )
+            if len(tickets) < int(requested_tickets_number):
+                bot.send_message(
+                    message.from_user.id,
+                    f"К сожалению, количество найденных билетов оказалось меньше запрашиваемого :(",
+                )
+
+        else:
+            bot.send_message(message.chat.id, "В кэше не оказалось таких билетов :(")
+
+        bot.delete_state(message.from_user.id, message.chat.id)
+
+    else:
+        bot.send_message(
+            message.from_user.id,
+            "Проверьте правильность введенного количества вариантов, должно быть "
+            "не более 10.",
+        )
