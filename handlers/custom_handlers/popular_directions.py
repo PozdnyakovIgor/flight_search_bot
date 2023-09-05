@@ -25,7 +25,8 @@ from utils.check_date import check_date
 def popular_directions(message: Message) -> None:
     """
     Команда для поиска популярных направлений из заданного города. При вводе города отправления появляется
-    инлайн-клавиатура с названиями самых популярных городов прибытия. Здесь задается состояние origin.
+    инлайн-клавиатура с названиями самых популярных городов прибытия. Выбираем город, указываем даты
+    отправления/прибытия (по желанию) и получаем информацию о билетах. Здесь задается состояние origin.
     :param message: Message
     :return: None
     """
@@ -77,8 +78,8 @@ def get_origin(message: Message) -> None:
 @bot.callback_query_handler(func=lambda call: len(call.data) == 3)
 def city_iata_code_callback(call: CallbackQuery) -> None:
     """
-    Пользователь выбрал город прибытия, нажав на кнопку.  Записываем IATA-код города и запрашиваем хочет ли он
-    указать дату отправления.
+    Пользователь выбрал город прибытия, нажав на кнопку.  Записываем IATA-код города, устанавливаем состояние
+    PopularDirectionsState.destination и запрашиваем хочет ли он указать дату отправления.
     :param call: Получает IATA-код города
     :return: None
     """
@@ -99,8 +100,8 @@ def city_iata_code_callback(call: CallbackQuery) -> None:
 )
 def enter_departure_at_callback(call: CallbackQuery) -> None:
     """
-    Пользователь нажал кнопку "Да" или "Нет". В зависимости от ответа пользователю предлагается ввести дату
-    отправления
+    Пользователь нажал кнопку "Да" или "Нет". В зависимости от ответа пользователь вводит дату отправления,
+    либо получает инлайн-клавиатуру с предлложением ввести дату прибытия
     :param call: 'yes' or 'no'
     :return: None
     """
@@ -123,10 +124,17 @@ def enter_departure_at_callback(call: CallbackQuery) -> None:
 
 @bot.message_handler(state=PopularDirectionsState.departure_at)
 def get_departure_at(message: Message) -> None:
+    """
+    Метод, в котором обрабатываем сообщение с датой вылета, если состояние PopularDirectionsState.departure_at,
+    устанавливаем состояние PopularDirectionsState.return_at и выводим инлайн-клавиатуру с предложением ввести
+    дату прилета
+    :param message: Message
+    :return: None
+    """
     if check_date(message.text):
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
             ticket_data["departure_at"] = message.text
-        bot.set_state(message.chat.id, PopularDirectionsState.return_at)  # была закомменчена
+        bot.set_state(message.chat.id, PopularDirectionsState.return_at)
         return_at_yes_no_markup(message)
 
     else:
@@ -141,6 +149,12 @@ def get_departure_at(message: Message) -> None:
     func=lambda call: call.data == "return_yes" or call.data == "return_no"
 )
 def enter_return_at_callback(call: CallbackQuery) -> None:
+    """
+    Пользователь нажал кнопку "Да" или "Нет". В зависимости от ответа пользователь вводит дату отправления, либо вводит
+    число билетов, которое необходимо показать
+    :param call: CallbackQuery
+    :return: None
+    """
     if call.data == "return_yes":
         bot.delete_message(call.message.chat.id, call.message.message_id)
         bot.set_state(call.message.chat.id, PopularDirectionsState.return_at)
@@ -160,6 +174,12 @@ def enter_return_at_callback(call: CallbackQuery) -> None:
 
 @bot.message_handler(state=PopularDirectionsState.return_at)
 def get_return_at(message: Message) -> None:
+    """
+    Метод, в котором обрабатываем сообщение с датой прилета, если состояние PopularDirectionsState.return_at,
+    запрашиваем кол-во билетов, необходимое для вывода и устанавливаем состояние PopularDirectionsState.limit
+    :param message: Message
+    :return: None
+    """
     if check_date(message.text):
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
             if (
@@ -191,6 +211,12 @@ def get_return_at(message: Message) -> None:
 
 @bot.message_handler(state=PopularDirectionsState.limit)
 def get_limit(message: Message) -> None:
+    """
+    Обрабатываем введенное пользователем кол-во билетов, если состояние PopularDirectionsState.limit,
+    отправляем запрос, выводим ответ и сбрасываем состояние
+    :param message:
+    :return:
+    """
     if message.text.isdigit() and 0 < int(message.text) <= 10:
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
             ticket_data["limit"] = message.text

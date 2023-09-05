@@ -4,7 +4,7 @@ from loader import bot
 
 def return_at_yes_no_markup(message: Message) -> None:
     """
-    Вызов в чат инлайн-кнопки с вопросом хочет ли пользователь указать дату отправления
+    Вызов в чат инлайн-кнопки с вопросом хочет ли пользователь указать дату возвращения
     :param message: Message
     :return: None
     """
