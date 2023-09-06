@@ -17,14 +17,21 @@ class Users(BaseModel):
 
 
 class History(BaseModel):
-    user = ForeignKeyField(Users, related_name="")
-    link = CharField()
-    info = CharField()
-    date = DateField()
+    user = ForeignKeyField(Users)
+    command = CharField()
+    request_info = CharField()
+    date_time = DateField()
+
+
+class TicketsInfo(BaseModel):
+    command_id = ForeignKeyField(History)  # to_field - не знаю, правильно или нет
+    ticket_info = CharField()
+    ticket_link = CharField()
 
 
 Users.create_table()
 History.create_table()
+TicketsInfo.create_table()
 
 
 def add_user_to_database(name: str, nickname: str) -> Model:
@@ -43,18 +50,18 @@ def add_user_to_database(name: str, nickname: str) -> Model:
 
 
 def add_tickets_search_to_history(
-    nickname: str, link: str, info: str, date: str | datetime
+    nickname: str, command: str, user_request: str, date: str | datetime
 ) -> None:
     """
-    Функция для добавления билета в историю поиска
+    Функция для добавления введенной команды и найденных билетов в историю поиска
+    :param command: команда, которую ввел пользователь
     :param nickname: никнейм пользователя
-    :param link: ссылка на билет
-    :param info: краткая информация о билете
+    :param user_request: краткая информация о билете
     :param date: дата поиска
     """
     History.create(
         user=Users.select().where(Users.nickname == nickname).get(),
-        link=link,
-        info=info,
+        command=command,
+        info=user_request,
         date=date,
     ).save()
