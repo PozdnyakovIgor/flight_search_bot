@@ -17,7 +17,7 @@ def get_city_iata_code(city_name: str) -> Optional[str]:
 
     if response.status_code == 200:
         for city_data in response.json():
-            if city_data["name"] == city_name:
+            if city_name in city_data["name"]:
                 city_iata_code = city_data["code"]
                 return city_iata_code
     return None
