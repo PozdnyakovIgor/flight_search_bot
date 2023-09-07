@@ -74,4 +74,3 @@ def add_request_search_to_history(
 #         request_info=user_request,
 #         date_time=date,
 #     ).save()
-#
