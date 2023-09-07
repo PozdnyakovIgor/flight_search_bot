@@ -17,7 +17,7 @@ def get_city_iata_code(city_name: str) -> Optional[str]:
 
     if response.status_code == 200:
         for city_data in response.json():
-            if city_data["name"] == city_name:
+            if city_name in city_data["name"]:
                 city_iata_code = city_data["code"]
                 return city_iata_code
     return None
@@ -43,17 +43,27 @@ def get_airport_name_from_iata_code(airport_iata_code: str) -> str:
     """
     Метод для определения аэропорта по IATA-коду
     :param airport_iata_code: IATA-код аэропорта
-    :return: airport_name
+    :return: airport_name название аэропорта
     :rtype: str
     """
 
     url = f"{TRAVELPAYOUTS_BASE_URL}{airport_iata_code}"
-    response = requests.get(url=url)
+    response = requests.get(url=url).json()
 
-    for airport_data in response.json():
-        if airport_data["type"] == "city" and airport_data["main_airport_name"] is not None:
-            airport_name = airport_data["main_airport_name"]
-        else:
+    airport_name = ""
+    for airport_data in response:
+        if (
+            airport_data["type"] == "airport"
+            and airport_data["code"] == airport_iata_code
+        ):
             airport_name = airport_data["name"]
+            break
 
-        return airport_name
+        elif (
+            airport_data["type"] == "city"
+            and airport_data["main_airport_name"] is not None
+        ):
+            airport_name = airport_data["main_airport_name"]
+            break
+
+    return airport_name
