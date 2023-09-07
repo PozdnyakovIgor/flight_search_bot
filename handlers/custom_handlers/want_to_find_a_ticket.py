@@ -160,7 +160,7 @@ def get_limit(message: Message) -> None:
             user_request=f'{ticket_data["origin"]} -> {ticket_data["destination"]}, '
             f'departure at: {ticket_data["departure_at"]}, '
             f'return at: {ticket_data["return_at"]}, limit: {ticket_data["limit"]}',
-            date=datetime.now(),
+            date=datetime.now().replace(microsecond=0),
         )
 
         bot.send_message(message.chat.id, pretty_response(tickets))

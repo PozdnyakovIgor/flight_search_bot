@@ -20,7 +20,7 @@ class History(BaseModel):
     user = ForeignKeyField(Users, db_column='user')
     command = CharField()
     request_info = CharField()
-    date_time = DateField()
+    date_time = DateTimeField()
 
 
 class TicketsInfo(BaseModel):
