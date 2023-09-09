@@ -3,10 +3,10 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from database.db_core import History, Users
 from loader import bot
 
-#TODO дописать callback_data, чтобы выдавал найденные билеты
-#TODO сделать сохранение в БД только последних 10 запросов
-def show_request_history(message: Message):
 
+# TODO дописать callback_data, чтобы выдавал найденные билеты
+# TODO сделать сохранение в БД только последних 10 запросов
+def show_request_history(message: Message):
     for history_entry in (
         History.select()
         .where(History.user == Users.get(Users.nickname == message.chat.username))
