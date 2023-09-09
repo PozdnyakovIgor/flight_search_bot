@@ -1,3 +1,7 @@
+from datetime import datetime
+
+from database import add_request_search_to_history
+from database.db_core import add_tickets_info
 from loader import bot
 from states.top_cheapest_tickets_states import CheapestTicketsInfoState
 from telebot.types import Message
@@ -5,15 +9,18 @@ from api_engine.api_aviasales_engine import (
     send_request_top_cheapest_tickets,
     one_ticket_pretty,
 )
-from api_engine.api_travelpayouts_engine import get_city_iata_code
-from utils.check_date import check_date
+from api_engine.api_travelpayouts_engine import (
+    get_city_iata_code,
+    get_city_name_from_iata_code,
+)
+from utils.check_date import check_date, format_date
 
 from keyboards.inline.departure_at_yes_no_keyboard import departure_at_yes_no_markup
 from keyboards.inline.return_at_yes_no_keyboard import return_at_yes_no_markup
 from keyboards.inline.url_button import make_url_button
 
 
-@bot.message_handler(commands=["top_cheapest_tickets"])
+@bot.message_handler(state="*", commands=["top_cheapest_tickets"])
 def top_cheapest_tickets(message: Message) -> None:
     """
     Команда для поиска самых дешевых билетов из заданного города. Можно указать даты вылета и/или прилета.
@@ -135,6 +142,15 @@ def get_limit(message: Message) -> None:
             ticket_data["limit"],
         )
 
+        last_history_request_id = add_request_search_to_history(
+            nickname=message.chat.username,
+            command="top_cheapest_tickets",
+            user_request=f'{get_city_name_from_iata_code(ticket_data["origin"])}({ticket_data["origin"]}), '
+            f'отправление: {ticket_data["departure_at"]}, '
+            f'прибытие: {ticket_data["return_at"]}, кол-во: {ticket_data["limit"]}',
+            date=datetime.now().replace(microsecond=0),
+        )
+
         if len(tickets["data"]):
             tickets = tickets["data"]
             for ticket in tickets:  # прочитать про for-else
@@ -145,8 +161,27 @@ def get_limit(message: Message) -> None:
                         f"https://www.aviasales.ru" f'{ticket["link"]}'
                     ),
                 )
-
+                if 'return_at' in ticket:
+                    add_tickets_info(request_id=last_history_request_id,
+                                     ticket_info=f'{get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]}) -> '
+                                                 f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]}),\n '
+                                                 f'Дата и время отправления: {format_date(ticket["departure_at"])},\n'
+                                                 f'Дата и время обратного рейса: {format_date(ticket["return_at"])},\n'
+                                                 f'Цена: {ticket["price"]} руб.',
+                                     ticket_link=f'https://www.aviasales.ru{ticket["link"]}',)
+                else:
+                    add_tickets_info(request_id=last_history_request_id,
+                                     ticket_info=f'{get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]}) -> '
+                                                 f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]}),\n '
+                                                 f'Дата и время отправления: {format_date(ticket["departure_at"])},\n'
+                                                 f'Цена: {ticket["price"]} руб.',
+                                     ticket_link=f'https://www.aviasales.ru{ticket["link"]}',)
         else:
+            add_tickets_info(
+                request_id=last_history_request_id,
+                ticket_info="Билеты по данному запросу не найдены.",
+                ticket_link="Отсутствует.",
+            )
             bot.send_message(message.chat.id, "В кэше не найдено таких билетов :(")
 
         bot.delete_state(message.from_user.id, message.chat.id)

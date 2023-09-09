@@ -1,15 +1,20 @@
 from datetime import datetime
 
 from database import add_request_search_to_history
+from database.db_core import add_tickets_info, History
 from loader import bot
 from states.ticket_information import TicketInfoState
 from telebot.types import Message
 from api_engine.api_aviasales_engine import send_request, pretty_response
-from api_engine.api_travelpayouts_engine import get_city_iata_code
-from utils.check_date import check_date
+from api_engine.api_travelpayouts_engine import (
+    get_city_iata_code,
+    get_city_name_from_iata_code,
+    get_airport_name_from_iata_code,
+)
+from utils.check_date import check_date, format_date
 
 
-@bot.message_handler(commands=["want_ticket"])
+@bot.message_handler(state="*", commands=["want_ticket"])
 def want_to_find_a_ticket(message: Message) -> None:
     """
     Команда для поиска билетов с заданными городами отправления и прибытия, с заданными датами отправления и прибытия.
@@ -153,17 +158,36 @@ def get_limit(message: Message) -> None:
             ticket_data["limit"],
         )
 
-        # TODO разобраться, почему сохраняется только дата без времени в бд
-        add_request_search_to_history(
+        last_history_request_id = add_request_search_to_history(
             nickname=message.chat.username,
             command="want_ticket",
-            user_request=f'{ticket_data["origin"]} -> {ticket_data["destination"]}, '
-            f'departure at: {ticket_data["departure_at"]}, '
-            f'return at: {ticket_data["return_at"]}, limit: {ticket_data["limit"]}',
+            user_request=f'{get_city_name_from_iata_code(ticket_data["origin"])}({ticket_data["origin"]}) -> '
+                         f'{get_city_name_from_iata_code(ticket_data["destination"])}({ticket_data["destination"]}), '
+            f'отправление: {ticket_data["departure_at"]}, '
+            f'прибытие: {ticket_data["return_at"]}, кол-во: {ticket_data["limit"]}',
             date=datetime.now().replace(microsecond=0),
         )
 
         bot.send_message(message.chat.id, pretty_response(tickets))
+
+        if len(tickets["data"]):
+            for ticket in tickets["data"]:
+                add_tickets_info(
+                    request_id=last_history_request_id,
+                    ticket_info=f'{get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]}) -> '
+                    f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]}),\n '
+                    f'Дата и время отправления: {format_date(ticket["departure_at"])},\n'
+                    f'Дата и время обратного рейса: {format_date(ticket["return_at"])},\n'
+                    f'Цена: {ticket["price"]} руб.',
+                    ticket_link=f'https://www.aviasales.ru{ticket["link"]}',
+                )
+        else:
+            add_tickets_info(
+                request_id=last_history_request_id,
+                ticket_info="Билеты по данному запросу не найдены.",
+                ticket_link="Отсутствует.",
+            )
+
         bot.delete_state(message.from_user.id, message.chat.id)
 
     else:

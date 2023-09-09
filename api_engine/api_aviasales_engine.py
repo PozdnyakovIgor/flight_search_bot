@@ -9,6 +9,7 @@ from api_engine.api_travelpayouts_engine import (
     get_city_name_from_iata_code,
     get_airport_name_from_iata_code,
 )
+from database.db_core import add_tickets_info
 
 from utils.check_date import format_date
 
@@ -122,6 +123,7 @@ def pretty_response(response: json) -> str:
                 f'Цена (руб): {ticket["price"]}\n'
                 f"Ссылка на билет: https://www.aviasales.ru" + ticket["link"] + "\n\n"
             )
+
     else:
         tickets = "В кэше не найдено таких билетов :("
 
