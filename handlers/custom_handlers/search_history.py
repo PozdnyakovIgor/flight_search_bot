@@ -1,7 +1,9 @@
-from telebot.types import Message
+from telebot.types import Message, CallbackQuery
 
+from database.db_core import History, Users
 from keyboards.inline.search_history_keyboards.search_history_keyboard import (
     show_request_history,
+    show_tickets,
 )
 from loader import bot
 
@@ -16,3 +18,10 @@ def get_history(message: Message) -> None:
     """
     bot.send_message(message.from_user.id, "Выберите один из недавних запросов:")
     show_request_history(message)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.isdigit())
+def show_tickets_info(call: CallbackQuery) -> None:
+    if call.data:
+        # show_tickets(call.message)
+        bot.send_message(call.message.chat.id, call.data)

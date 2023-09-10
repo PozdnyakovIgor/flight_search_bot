@@ -175,7 +175,7 @@ def get_limit(message: Message) -> None:
                 add_tickets_info(
                     request_id=last_history_request_id,
                     ticket_info=f'{get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]}) -> '
-                    f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]}),\n '
+                    f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]}),\n'
                     f'Дата и время отправления: {format_date(ticket["departure_at"])},\n'
                     f'Дата и время обратного рейса: {format_date(ticket["return_at"])},\n'
                     f'Цена: {ticket["price"]} руб.',
