@@ -6,7 +6,11 @@ from keyboards.inline.url_button import make_url_button
 from loader import bot
 from states.popular_directions_states import PopularDirectionsState
 from telebot.types import Message, CallbackQuery
-from api_engine import get_city_iata_code, get_city_name_from_iata_code
+from api_engine import (
+    get_city_iata_code,
+    get_city_name_from_iata_code,
+    get_airport_name_from_iata_code,
+)
 from api_engine.api_aviasales_engine import (
     send_request_popular_directions,
     get_popular_directions,
@@ -236,12 +240,16 @@ def get_limit(message: Message) -> None:
             ticket_data["return_at"],
             ticket_data["limit"],
         )
+        if ticket_data["departure_at"] is None:
+            ticket_data["departure_at"] = "не указано"
+        if ticket_data["return_at"] is None:
+            ticket_data["return_at"] = "не указано"
 
         last_history_request_id = add_request_search_to_history(
             nickname=message.chat.username,
             command="popular_directions",
             user_request=f'{get_city_name_from_iata_code(ticket_data["origin"])}({ticket_data["origin"]}) -> '
-                         f'{get_city_name_from_iata_code(ticket_data["destination"])}({ticket_data["destination"]}), '
+            f'{get_city_name_from_iata_code(ticket_data["destination"])}({ticket_data["destination"]}), '
             f'отправление: {ticket_data["departure_at"]}, '
             f'прибытие: {ticket_data["return_at"]}, кол-во: {ticket_data["limit"]}',
             date=datetime.now().replace(microsecond=0),
@@ -257,21 +265,35 @@ def get_limit(message: Message) -> None:
                         f"https://www.aviasales.ru" f'{ticket["link"]}'
                     ),
                 )
-                if 'return_at' in ticket:
-                    add_tickets_info(request_id=last_history_request_id,
-                                     ticket_info=f'{get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]}) -> '
-                                                 f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]}),\n'
-                                                 f'Дата и время отправления: {format_date(ticket["departure_at"])},\n'
-                                                 f'Дата и время обратного рейса: {format_date(ticket["return_at"])},\n'
-                                                 f'Цена: {ticket["price"]} руб.',
-                                     ticket_link=f'https://www.aviasales.ru{ticket["link"]}',)
+                if "return_at" in ticket:
+                    add_tickets_info(
+                        request_id=last_history_request_id,
+                        ticket_info=f'{get_city_name_from_iata_code(ticket["origin"])} '
+                                    f'({ticket["origin"]}), '
+                                    f'аэропорт {get_airport_name_from_iata_code(ticket["origin_airport"])} '
+                                    f'({ticket["origin_airport"]}) -> '
+                                    f'{get_city_name_from_iata_code(ticket["destination"])} '
+                                    f'({ticket["destination"]}),'
+                                    f'аэропорт {get_airport_name_from_iata_code(ticket["destination_airport"])}'
+                                    f'({ticket["destination_airport"]})\n'
+                                    f'Дата и время отправления: {format_date(ticket["departure_at"])},\n'
+                                    f'Дата и время обратного рейса: {format_date(ticket["return_at"])},\n'
+                                    f'Цена: {ticket["price"]} руб.',
+                        ticket_link=f'https://www.aviasales.ru{ticket["link"]}',
+                    )
                 else:
-                    add_tickets_info(request_id=last_history_request_id,
-                                     ticket_info=f'{get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]}) -> '
-                                                 f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]}),\n'
-                                                 f'Дата и время отправления: {format_date(ticket["departure_at"])},\n'
-                                                 f'Цена: {ticket["price"]} руб.',
-                                     ticket_link=f'https://www.aviasales.ru{ticket["link"]}',)
+                    add_tickets_info(
+                        request_id=last_history_request_id,
+                        ticket_info=f'{get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]}), '
+                                    f'аэропорт {get_airport_name_from_iata_code(ticket["origin_airport"])} '
+                                    f'({ticket["origin_airport"]}) -> '
+                                    f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]}), '
+                                    f'аэропорт {get_airport_name_from_iata_code(ticket["destination_airport"])}'
+                                    f'({ticket["destination_airport"]})\n'
+                                    f'Дата и время отправления: {format_date(ticket["departure_at"])},\n'
+                                    f'Цена: {ticket["price"]} руб.',
+                        ticket_link=f'https://www.aviasales.ru{ticket["link"]}',
+                    )
             if len(tickets) < int(requested_tickets_number):
                 bot.send_message(
                     message.from_user.id,

@@ -162,7 +162,7 @@ def get_limit(message: Message) -> None:
             nickname=message.chat.username,
             command="want_ticket",
             user_request=f'{get_city_name_from_iata_code(ticket_data["origin"])}({ticket_data["origin"]}) -> '
-                         f'{get_city_name_from_iata_code(ticket_data["destination"])}({ticket_data["destination"]}), '
+            f'{get_city_name_from_iata_code(ticket_data["destination"])}({ticket_data["destination"]}), '
             f'отправление: {ticket_data["departure_at"]}, '
             f'прибытие: {ticket_data["return_at"]}, кол-во: {ticket_data["limit"]}',
             date=datetime.now().replace(microsecond=0),
@@ -174,11 +174,15 @@ def get_limit(message: Message) -> None:
             for ticket in tickets["data"]:
                 add_tickets_info(
                     request_id=last_history_request_id,
-                    ticket_info=f'{get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]}) -> '
-                    f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]}),\n'
-                    f'Дата и время отправления: {format_date(ticket["departure_at"])},\n'
-                    f'Дата и время обратного рейса: {format_date(ticket["return_at"])},\n'
-                    f'Цена: {ticket["price"]} руб.',
+                    ticket_info=f'{get_city_name_from_iata_code(ticket["origin"])} ({ticket["origin"]}), '
+                                f'аэропорт {get_airport_name_from_iata_code(ticket["origin_airport"])} '
+                                f'({ticket["origin_airport"]}) -> '
+                                f'{get_city_name_from_iata_code(ticket["destination"])} ({ticket["destination"]}), '
+                                f'аэропорт {get_airport_name_from_iata_code(ticket["destination_airport"])} '
+                                f'({ticket["destination_airport"]})\n'
+                                f'Дата и время отправления: {format_date(ticket["departure_at"])},\n'
+                                f'Дата и время обратного рейса: {format_date(ticket["return_at"])},\n'
+                                f'Цена: {ticket["price"]} руб.',
                     ticket_link=f'https://www.aviasales.ru{ticket["link"]}',
                 )
         else:
