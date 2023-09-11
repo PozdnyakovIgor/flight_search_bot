@@ -220,10 +220,11 @@ def get_return_at(message: Message) -> None:
 @bot.message_handler(state=PopularDirectionsState.limit)
 def get_limit(message: Message) -> None:
     """
-    Обрабатываем введенное пользователем кол-во билетов, если состояние PopularDirectionsState.limit,
-    отправляем запрос, выводим ответ и сбрасываем состояние
-    :param message:
-    :return:
+    Обрабатываем введенное пользователем кол-во билетов, если состояние PopularDirectionsState.limit, отправляем
+    запрос, выводим ответ и сбрасываем состояние. Также осуществляется запись запроса и информации о найденных
+    билетах в БД
+    :param message: Message
+    :return: None
     """
     if message.text.isdigit() and 0 < int(message.text) <= 10:
         with bot.retrieve_data(message.from_user.id, message.chat.id) as ticket_data:
@@ -251,13 +252,13 @@ def get_limit(message: Message) -> None:
             user_request=f'{get_city_name_from_iata_code(ticket_data["origin"])}({ticket_data["origin"]}) -> '
             f'{get_city_name_from_iata_code(ticket_data["destination"])}({ticket_data["destination"]}), '
             f'отправление: {ticket_data["departure_at"]}, '
-            f'прибытие: {ticket_data["return_at"]}, кол-во: {ticket_data["limit"]}',
+            f'возвращение: {ticket_data["return_at"]}, кол-во: {ticket_data["limit"]}',
             date=datetime.now().replace(microsecond=0),
         )
 
         if len(tickets["data"]):
             tickets = tickets["data"]
-            for ticket in tickets:  # прочитать про for-else
+            for ticket in tickets:
                 bot.send_message(
                     message.chat.id,
                     one_ticket_pretty(ticket),

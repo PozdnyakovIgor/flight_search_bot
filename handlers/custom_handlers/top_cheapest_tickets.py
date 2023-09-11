@@ -125,7 +125,8 @@ def get_return_at(message: Message) -> None:
 def get_limit(message: Message) -> None:
     """
     Метод, в котором обрабатываем сообщение с кол-ом билетов, необходимым для вывода, если состояние пользователя
-    CheapestTicketsInfoState.limit, выдаем ответ и сбрасываем состояние.
+    CheapestTicketsInfoState.limit, выдаем ответ и сбрасываем состояние. Также осуществляется запись запроса и
+    информации о найденных билетах в БД
     :param message:
     :return:
     """
@@ -152,7 +153,7 @@ def get_limit(message: Message) -> None:
             command="top_cheapest_tickets",
             user_request=f'{get_city_name_from_iata_code(ticket_data["origin"])}({ticket_data["origin"]}), '
             f'отправление: {ticket_data["departure_at"]}, '
-            f'прибытие: {ticket_data["return_at"]}, кол-во: {ticket_data["limit"]}',
+            f'возвращение: {ticket_data["return_at"]}, кол-во: {ticket_data["limit"]}',
             date=datetime.now().replace(microsecond=0),
         )
 

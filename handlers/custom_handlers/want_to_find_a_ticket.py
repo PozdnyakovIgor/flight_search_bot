@@ -19,7 +19,8 @@ def want_to_find_a_ticket(message: Message) -> None:
     """
     Команда для поиска билетов с заданными городами отправления и прибытия, с заданными датами отправления и прибытия.
     Здесь задается состояние origin
-
+    :param message: Message
+    :return: None
     """
     bot.set_state(message.from_user.id, TicketInfoState.origin, message.chat.id)
     bot.send_message(
@@ -32,7 +33,8 @@ def get_origin(message: Message) -> None:
     """
     Метод, в котором обрабатываем сообщение с городом отправления, если состояние пользователя TicketInfoState.origin.
     Также осуществляется проверка на корректность введенного города
-
+    :param message: Message
+    :return: None
     """
 
     if get_city_iata_code(message.text) is not None:
@@ -57,6 +59,8 @@ def get_destination(message: Message) -> None:
     """
     Метод, в котором обрабатываем сообщение с городом прибытия, если состояние пользователя TicketInfoState.destination
     Также осуществляется проверка на корректность введенного города
+    :param message: Message
+    :return: None
     """
 
     if get_city_iata_code(message.text) is not None:
@@ -84,6 +88,8 @@ def get_departure_at(message: Message) -> None:
     """
     Метод, в котором обрабатываем сообщение с датой отправления, если состояние пользователя TicketInfoState.departure_at
     Также осуществляется проверка на корректность введенной даты
+    :param message: Message
+    :return: None
     """
 
     if check_date(message.text):
@@ -108,6 +114,8 @@ def get_return_at(message: Message) -> None:
     """
     Метод, в котором обрабатываем сообщение с датой прибытия, если состояние пользователя TicketInfoState.return_at
     Также осуществляется проверка на корректность введенной даты
+    :param message: Message
+    :return: None
     """
 
     if check_date(message.text):
@@ -138,8 +146,9 @@ def get_return_at(message: Message) -> None:
 def get_limit(message: Message) -> None:
     """
     Метод, в котором обрабатываем сообщение с числом вариантов, выдаем ответ и сбрасываем состояние, если состояние
-    пользователя TicketInfoState.limit
-
+    пользователя TicketInfoState.limit. Также осуществляется запись запроса и информации о найденных билетах в БД
+    :param message: Message
+    :return: None
     """
 
     if message.text.isdigit() and 0 < int(message.text) <= 5:
@@ -164,7 +173,7 @@ def get_limit(message: Message) -> None:
             user_request=f'{get_city_name_from_iata_code(ticket_data["origin"])}({ticket_data["origin"]}) -> '
             f'{get_city_name_from_iata_code(ticket_data["destination"])}({ticket_data["destination"]}), '
             f'отправление: {ticket_data["departure_at"]}, '
-            f'прибытие: {ticket_data["return_at"]}, кол-во: {ticket_data["limit"]}',
+            f'возвращение: {ticket_data["return_at"]}, кол-во: {ticket_data["limit"]}',
             date=datetime.now().replace(microsecond=0),
         )
 

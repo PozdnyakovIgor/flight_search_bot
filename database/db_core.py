@@ -53,7 +53,7 @@ def add_request_search_to_history(
     nickname: str, command: str, user_request: str, date: str | datetime
 ) -> str:
     """
-    Функция для добавления введенной команды и найденных билетов в историю поиска
+    Функция для добавления введенной команды в историю поиска
     :param command: команда, которую ввел пользователь
     :param nickname: никнейм пользователя
     :param user_request: запрос пользователя
@@ -70,15 +70,15 @@ def add_request_search_to_history(
     return new_entry
 
 
-# было
-#     History.create(
-#         user=Users.select().where(Users.nickname == nickname).get(),
-#         command=command,
-#         request_info=user_request,
-#         date_time=date,
-#     ).save()
-#
-def add_tickets_info(request_id: str, ticket_info: str = None, ticket_link: str = None) -> str:
+def add_tickets_info(request_id: str, ticket_info: str = None, ticket_link: str = None) -> int:
+    """
+    Метод для добавления информации о найденных билетах в таблицу TicketsInfo БД
+    :param request_id: номер запроса из таблицы History
+    :param ticket_info: информация о найденном билете
+    :param ticket_link: ссылка на билет
+    :return: new_ticket_entry порядковый номер из таблицы TicketInfo
+    :rtype int
+    """
     new_ticket_entry = TicketsInfo.create(
         request_id=History.select().where(History.id == request_id).get(),
         ticket_info=ticket_info,
