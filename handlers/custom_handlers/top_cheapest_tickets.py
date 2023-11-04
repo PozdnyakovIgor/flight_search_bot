@@ -159,7 +159,7 @@ def get_limit(message: Message) -> None:
 
         if len(tickets["data"]):
             tickets = tickets["data"]
-            for ticket in tickets:  # прочитать про for-else
+            for ticket in tickets:
                 bot.send_message(
                     message.chat.id,
                     one_ticket_pretty(ticket),
