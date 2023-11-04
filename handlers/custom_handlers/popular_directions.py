@@ -124,7 +124,6 @@ def enter_departure_at_callback(call: CallbackQuery) -> None:
 
     elif call.data == "departure_no":
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        # bot.set_state(call.message.chat.id, PopularDirectionsState.departure_at)
         with bot.retrieve_data(call.message.chat.id) as ticket_data:
             ticket_data["departure_at"] = None
         return_at_yes_no_markup(call.message)
