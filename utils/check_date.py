@@ -3,7 +3,7 @@ from datetime import datetime
 
 def check_date(date_to_check) -> bool:
     """
-    Функция для проверки корректности введенной даты.
+    Функция для проверки корректности формата введенной даты и того, что дата не из прошлого.
     :param date_to_check: дата для проверки
     :return: True or False
     :rtype: bool
